@@ -355,6 +355,55 @@ b_lines equ 228
 ;    bset.b #0,mask_a.w
 ;    bset.b #0,enable_a.w
 
+* initialise sound chip
+    ;bra end_init_mus 
+	move.w	#$8800,a0
+
+	move.l	#init_mus,a2
+
+do_init_mus:
+	move.w	(a2)+,d0
+	bmi.s	end_init_mus
+
+	movep.w	d0,(a0)
+	bra.s	do_init_mus
+
+init_mus:
+	dc.w	$0000
+	dc.w	$0100
+	dc.w	$0200
+	dc.w	$0300
+	dc.w	$0400
+	dc.w	$0500
+	dc.w	$0600
+	dc.b	$07,%01111111
+	dc.w	$0d00
+
+	dc.w	-1
+
+end_init_mus:
+
+    rept 1
+    lea.l keyclick,a6
+    move.l	#nos,a5		; and numbers for chip
+
+	move.b	(a6)+,2(a5)	; put data into correct positions
+	move.b	(a6)+,6(a5)
+	move.b	(a6)+,$a(a5)
+	move.b	(a6)+,$e(a5)
+	move.b	(a6)+,$12(a5)
+	move.b	(a6)+,$16(a5)
+	move.b	(a6)+,$1a(a5)
+	move.b	(a6)+,$1e(a5)
+	move.b	(a6)+,$22(a5)
+	move.b	(a6)+,$26(a5)
+	move.b	(a6)+,$2a(a5)
+
+    movem.l	(a5),a0-2/d0-7	; slap all data into sound chip
+	movem.l	a0-2/d0-7,$ffff8800.w ; total of 11 long words (44 bytes!)
+
+    endr
+
 ; set up vbl (will initialize timer b every time)
     move.l $70.w,-(sp) ; store old vbl on top of stack
     move.l #my_70,$70.w ; install new vbl!
@@ -418,15 +467,35 @@ my_70:
 
 ; it seems those 2 cycles are totally ok to go up or down (actually even a few more or less are ok at this stage)
 
-    move.w sr,d0 ; "nop" of 6 cycles
-    rept 4261
-    nop
-    endr ; total of 4262.5 nops
+; if there is no vbi counter:
+;    move.w sr,d0 ; "nop" of 6 cycles
+;    rept 4261
+;    nop
+;    endr ; total of 4262.5 nops
 
-    ;move.w sr,d0 ; "nop" of 6 cycles
-    ;rept 3730
-    ;nop
-    ;endr
+; start counter handling
+    move.w vbicounter,d0
+    tst.b d0
+    beq every256
+
+    nop
+    nop
+    nop
+
+    bra cont256
+every256:
+    eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
+
+cont256:
+    addq.w #1,d0
+    move.w d0,vbicounter
+; end counter handling, constant at 62 cycles (=15.5 nops)
+
+    ; add the remaining cycles
+    rept 4247
+    nop
+    endr ; total of 4247 nops
+
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -710,7 +779,42 @@ inp:
 mouse_params:
     dc.b    0,1,1,1
 my_pal:
-    incbin 'spr_pal.dat'
+    dc.w $0000,$0666,$0700,$0070,$0007,$0770,$0077,$0707
+    dc.w $0777,$0500,$0050,$0005,$0550,$0055,$0505,$0555
+    ; incbin 'spr_pal.dat'
+vbicounter:
+    dc.w 0
+
+keyclick: ; taken from emutos!
+    dc.b $3B,0 ; channel A pitch (0,1)
+    dc.b 0,0 ; no channel B (2,3)
+    dc.b 0,0 ; no channel C (4,5)
+    dc.b 0 ; no noise (6)
+    dc.b $FE ; only channel A (7)
+    dc.b 16 ; channel A amplitude (8)
+    dc.b 0 ; channel B amp (9)
+    dc.b 0 ; channel B amp (10)
+    dc.b $80 ; envelope (11)
+    dc.b 1 ; envelope (12)
+    dc.b 3 ; envelope (13)
+
+    even
+
+nos:	DC.B	0,0,$3E,0
+	dc.b	1,1,1,0
+	DC.B	2,2,$EE,0
+	dc.b	3,3,0,0
+	DC.B	4,4,$59,0
+	dc.b	5,5,2,0
+	DC.B	6,6,7,0
+	dc.b	7,7,$F8,$FF
+vols:
+	DC.B	8,8
+vol1	dc.b	$E,0
+	DC.B	9,9
+vol2	dc.b	$E,0
+	DC.B	$A,$A
+vol3	dc.b	$F,0
 
     bss
 ; mouse vector
