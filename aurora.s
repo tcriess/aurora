@@ -383,26 +383,58 @@ init_mus:
 
 end_init_mus:
 
-    rept 1
-    lea.l keyclick,a6
-    move.l	#nos,a5		; and numbers for chip
+snd_keyclick macro
+    lea.l keyclick,a6   ; 12
+    move.l	#nos,a5		; 12 and numbers for chip
 
-	move.b	(a6)+,2(a5)	; put data into correct positions
-	move.b	(a6)+,6(a5)
-	move.b	(a6)+,$a(a5)
-	move.b	(a6)+,$e(a5)
-	move.b	(a6)+,$12(a5)
-	move.b	(a6)+,$16(a5)
-	move.b	(a6)+,$1a(a5)
-	move.b	(a6)+,$1e(a5)
-	move.b	(a6)+,$22(a5)
-	move.b	(a6)+,$26(a5)
-	move.b	(a6)+,$2a(a5)
+	move.b	(a6)+,2(a5)	; 16 put data into correct positions
+	move.b	(a6)+,6(a5) ; 16
+	move.b	(a6)+,$a(a5) ; 16
+	move.b	(a6)+,$e(a5) ; 16
+	move.b	(a6)+,$12(a5) ; 16
+	move.b	(a6)+,$16(a5) ; 16
+	move.b	(a6)+,$1a(a5) ; 16
+	move.b	(a6)+,$1e(a5) ; 16
+	move.b	(a6)+,$22(a5) ; 16
+	move.b	(a6)+,$26(a5) ; 16
+	move.b	(a6)+,$2a(a5) ; 16
 
-    movem.l	(a5),a0-2/d0-7	; slap all data into sound chip
-	movem.l	a0-2/d0-7,$ffff8800.w ; total of 11 long words (44 bytes!)
+    ; methinks that the following only works because of the
+    ; so-called "shadow registers", i.e. register ff8800 is
+    ; repeated from ff8800 to ff88ff or so, which means
+    ; it is ok to put the complete data into ff8800
+    ; but be aware that this won't work with falcon/tt,
+    ; because there are no shadow registers!
+    movem.l	(a5),a0-a3/d1-d7	; 100 slap all data into sound chip
+	movem.l	a0-a3/d1-d7,$ffff8800.w ; 100 total of 11 long words (44 bytes!)
+    endm ; destroys a0-a3,a5-a6,d1-d7, exactly 400 cycles
 
-    endr
+snd_reset macro
+    lea.l sndrs,a6   ; 12
+    move.l	#nos,a5		; 12 and numbers for chip
+
+	move.b	(a6)+,2(a5)	; 16 put data into correct positions
+	move.b	(a6)+,6(a5) ; 16
+	move.b	(a6)+,$a(a5) ; 16
+	move.b	(a6)+,$e(a5) ; 16
+	move.b	(a6)+,$12(a5) ; 16
+	move.b	(a6)+,$16(a5) ; 16
+	move.b	(a6)+,$1a(a5) ; 16
+	move.b	(a6)+,$1e(a5) ; 16
+	move.b	(a6)+,$22(a5) ; 16
+	move.b	(a6)+,$26(a5) ; 16
+	move.b	(a6)+,$2a(a5) ; 16
+
+    ; methinks that the following only works because of the
+    ; so-called "shadow registers", i.e. register ff8800 is
+    ; repeated from ff8800 to ff88ff or so, which means
+    ; it is ok to put the complete data into ff8800
+    ; but be aware that this won't work with falcon/tt,
+    ; because there are no shadow registers!
+    movem.l	(a5),a0-a3/d1-d7	; 100 slap all data into sound chip
+	movem.l	a0-a3/d1-d7,$ffff8800.w ; 100 total of 11 long words (44 bytes!)
+    endm ; destroys a0-a3,a5-a6,d1-d7, exactly 400 cycles
+    
 
 ; set up vbl (will initialize timer b every time)
     move.l $70.w,-(sp) ; store old vbl on top of stack
@@ -482,20 +514,33 @@ my_70:
     nop
     nop
 
+    dcb.w 100,$4e71 ; 100 nops for the snd reset
+    
+    nop ; 3 nop in between
+    nop
+    nop
+    snd_reset
+    ;dcb.w 100,$4e71 ; 100 nops for the keyclick
+
     bra cont256
 every256:
     eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
 
+    snd_reset ; 400 cycles
+    nop ; 3 nop in between
+    nop
+    nop
+    snd_reset
+    ; dcb.w 100,$4e71
+    ;snd_keyclick ; 400 cycles
+
 cont256:
     addq.w #1,d0
     move.w d0,vbicounter
-; end counter handling, constant at 62 cycles (=15.5 nops)
+; end counter handling, constant at 400+400+62 cycles (=100+100+15.5 nops)
 
     ; add the remaining cycles
-    rept 4247
-    nop
-    endr ; total of 4247 nops
-
+    dcb.w 4043,$4e71
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -797,6 +842,21 @@ keyclick: ; taken from emutos!
     dc.b $80 ; envelope (11)
     dc.b 1 ; envelope (12)
     dc.b 3 ; envelope (13)
+
+    even
+
+sndrs:
+    dc.b 0,0
+    dc.b 0,0
+    dc.b 0,0
+    dc.b 0
+    dc.b $7F
+    dc.b 0
+    dc.b 0
+    dc.b 0
+    dc.b 0
+    dc.b 0
+    dc.b 0
 
     even
 
