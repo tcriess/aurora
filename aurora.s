@@ -273,6 +273,8 @@ b_lines equ 228
 
     endr
 
+    move.l a6,scrollscraddr
+
 ; lower border
     rept 10
     ; the leftmost pixel (in hatari at least) is here 
@@ -435,6 +437,83 @@ snd_reset macro
 	movem.l	a0-a3/d1-d7,$ffff8800.w ; 100 total of 11 long words (44 bytes!)
     endm ; destroys a0-a3,a5-a6,d1-d7, exactly 400 cycles
     
+snd_keyclick2 macro
+    move.b #$00,$ffff8800.w ; register 0 (chan 1)
+    move.b #$3B,$ffff8802.w
+    move.b #$01,$ffff8800.w ; register 1 (chan 1)
+    move.b #$00,$ffff8802.w
+    move.b #$02,$ffff8800.w ; register 2 (chan 2)
+    move.b #$00,$ffff8802.w
+    move.b #$03,$ffff8800.w ; register 3 (chan 2)
+    move.b #$00,$ffff8802.w
+    move.b #$04,$ffff8800.w ; register 4 (chan 3)
+    move.b #$00,$ffff8802.w
+    move.b #$05,$ffff8800.w ; register 5 (chan 3)
+    move.b #$00,$ffff8802.w
+    move.b #$06,$ffff8800.w ; register 6 (noise)
+    move.b #$00,$ffff8802.w
+    move.b #$07,$ffff8800.w ; register 7 (chan select)
+    move.b #$FE,$ffff8802.w
+    move.b #$08,$ffff8800.w ; register 8 (amplitude chan 1)
+    move.b #$10,$ffff8802.w
+    move.b #$09,$ffff8800.w ; register 9 (amplitude chan 2)
+    move.b #$00,$ffff8802.w
+    move.b #$0a,$ffff8800.w ; register 10 (amplitude chan 3)
+    move.b #$00,$ffff8802.w
+    move.b #$0B,$ffff8800.w ; register 11 (envelope)
+    move.b #$80,$ffff8802.w ; bit 4 set means: use envelope
+    move.b #$0C,$ffff8800.w ; register 12
+    move.b #$01,$ffff8802.w
+    move.b #$0D,$ffff8800.w ; register 13
+    move.b #$03,$ffff8802.w
+    endm
+
+    ; try to shift one line by 1 byte in ~400 cycles
+    ; only 1 plane
+    ; 1 line = 230 bytes total
+    ;rept 28
+    ;move.b 1(a0),(a0)+
+    ;move.b 7(a0),(a0)+
+    ;addq.l #6,a0
+    ;endr
+
+    ;next try: shift by 1 word
+    ;rept 14
+    ;move.w 8(a0),(a0)+
+    ;addq #6,a0
+    ;endr ; 336 cycles
+
+
+
+;; make sure the screen address is in a1
+;    movea.l 128*4(a1),a6
+;    lea.l scrolltable,a1
+    
+;    movea.l tpos,a0
+;    moveq #0,d2
+    
+;    moveq #20-1,d1
+;.l2             ; MOVEA.L (A1)+,A2    ;A2=DESTINATION
+;    add.w (a1)+,d2
+;    lea.l (a6,d2.w),a2 ; screen addr
+;    movea.l (a0)+,a3    ;A3=SOURCE
+;    ;rept 36
+;    move.b (a3)+,(a2) ; 12 (2/1) 2
+;    ;lea 160(a2),a2 ; 8 (2/0) 4
+;    ;endr
+;    add.w (a1)+,d2
+;    addq #1,d2
+;    lea.l (a6,d2.w),a2 ; screen addr
+;    movea.l (a0)+,a3
+;    ;rept 36
+;    move.b (a3)+,(a2)
+;    ;lea 160(a2),a2
+;    ;endr
+;    addq #7,d2
+;    dbf d1,.l2
+;    addq.l #4,tpos          ;INCREASE POSITION IN TEXT.
+
+    ;jsr music+0
 
 ; set up vbl (will initialize timer b every time)
     move.l $70.w,-(sp) ; store old vbl on top of stack
@@ -445,6 +524,8 @@ snd_reset macro
 
 ; restore vbl
     move.l (sp)+,$70.w
+
+    ;jsr music+4
 
 ;; restore timers
 ;    lea old,a0
@@ -494,53 +575,19 @@ my_70:
 ;    dbra d0,pause ; nicht gesprungen (1x) 14 cycles, gesprungen (1064x) 12 cycles
 
 ; dbra seems to take 1x 14 cycles (counter expired) and 1064x 12 cycles (a little unclear why it is like that...)
-; total cycles = 8+4*1065+1064*12+14 = 17050
-; number of nops then 17050 / 4 = 4262.5
+; round-to-four means: 1x 16 cycles (counter exp) + 1064x 12 cycles (counter counting) + 1065x 4 cycles (nop) + 8 cycles (move) = 17052 cycles
+; number of nops then 17052 / 4 = 4263
 
 ; it seems those 2 cycles are totally ok to go up or down (actually even a few more or less are ok at this stage)
 
 ; if there is no vbi counter:
-;    move.w sr,d0 ; "nop" of 6 cycles
-;    rept 4261
+;    rept 4263
 ;    nop
-;    endr ; total of 4262.5 nops
+;    endr ; total of 4263 nops
 
-; start counter handling
-    move.w vbicounter,d0
-    tst.b d0
-    beq every256
 
-    nop
-    nop
-    nop
-
-    dcb.w 100,$4e71 ; 100 nops for the snd reset
-    
-    nop ; 3 nop in between
-    nop
-    nop
-    snd_reset
-    ;dcb.w 100,$4e71 ; 100 nops for the keyclick
-
-    bra cont256
-every256:
-    eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
-
-    snd_reset ; 400 cycles
-    nop ; 3 nop in between
-    nop
-    nop
-    snd_reset
-    ; dcb.w 100,$4e71
-    ;snd_keyclick ; 400 cycles
-
-cont256:
-    addq.w #1,d0
-    move.w d0,vbicounter
-; end counter handling, constant at 400+400+62 cycles (=100+100+15.5 nops)
-
-    ; add the remaining cycles
-    dcb.w 4043,$4e71
+    ; add the remaining cycles 4263
+    dcb.w 4263,$4e71
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -643,17 +690,28 @@ lines   equ     227
     endr ; 512 cycles per line
 
     * FINAL LINE...
+    nop
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
     move.b  d4,(a1)         ; to lo-res 8 cycles
 
-    dcb.w   90,$4e71 ; 90*4 = 360 cycles
+    ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
+
+    ;next try: shift by 1 word
+    ; this is only half a line :(
+    movea.l scrollscraddr,a6
+    rept 14
+    move.w 8(a6),(a6)+
+    addq #6,a6
+    endr ; 336 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
     move.b  d3,(a0) ; 8 cycles
 
     dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    ;dcb.w   8,$4e71
+    ;eor.w   #$0f0,$ffff8240.w
 
 * EXTRA!
     move.b  d3,(a1) ; 8 cycles
@@ -670,14 +728,58 @@ lines   equ     227
 * BOTTOM BORDER LEFT & RIGHTS!
 ; what hatari displays is about 48 lines, but this code only works with 44... (respectively the possibility to exit is lost)
 bot_lines       equ     28
-    rept    bot_lines
+    rept    bot_lines/2
 
     nop
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome
     move.b  d4,(a1)         ; to lo-res
 
-    dcb.w   89,$4e71
+    ;dcb.w   89,$4e71
+
+    ;nop
+    ;nop
+    ;nop
+    ;nop
+    move.w   #$0f0,$ffff8240.w
+
+    rept 14
+    move.w 8(a6),(a6)+
+    addq #6,a6
+    endr ; 336 cycles
+
+* RIGHT AGAIN...
+    move.b  d4,(a0)
+    move.b  d3,(a0)
+
+    dcb.w   9,$4e71
+    move.w   #$000,$ffff8240.w
+
+* EXTRA!
+    move.b  d3,(a1)
+    nop
+    move.b  d4,(a1)
+
+    dcb.w   12,$4e71
+
+    ;dcb.w   7,$4e71
+    ;eor.w   #$0f0,$ffff8240.w
+
+; second line
+    nop
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome
+    move.b  d4,(a1)         ; to lo-res
+
+    ;dcb.w   89,$4e71
+
+    nop
+    nop
+    addq #6,a6
+    rept 14
+    move.w 8(a6),(a6)+
+    addq #6,a6
+    endr ; 336 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
@@ -693,6 +795,25 @@ bot_lines       equ     28
     dcb.w   12,$4e71
 
     endr ; same as before, 512 cycles per line
+
+    ; now, the time critical stuff is done, and we still have a few cycles for sound...
+
+; start counter handling
+    move.w curr_blink,d0
+    subq.w #1,d0
+    tst.b d0
+    bne cont_blink
+
+do_blink:
+    eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
+
+    snd_keyclick2
+    move.w blink_rate,d0
+    ;lsl.w #1,d0
+
+cont_blink:
+    move.w d0,curr_blink
+; end counter handling
 
 ; restore registers
     movem.l (sp)+,d0-d7/a0-a6
@@ -758,7 +879,7 @@ init_screen:
 
 ; now get the palette
     move.l  #$ffff8240,a0
-    lea     pal(pc),a1
+    lea     pal,a1
     movem.l (a0),d0-d7
     movem.l d0-d7,(a1)       ; just 2 instructions store the palette!
 
@@ -786,7 +907,7 @@ restore:
     bsr     set_scrn
     
 * now the old palette back again!
-    lea     pal(pc),a0
+    lea     pal,a0
     move.l  #$ffff8240,a1
 
     movem.l (a0),d0-7
@@ -850,7 +971,7 @@ sndrs:
     dc.b 0,0
     dc.b 0,0
     dc.b 0
-    dc.b $7F
+    dc.b $FF
     dc.b 0
     dc.b 0
     dc.b 0
@@ -861,20 +982,22 @@ sndrs:
     even
 
 nos:	DC.B	0,0,$3E,0
-	dc.b	1,1,1,0
-	DC.B	2,2,$EE,0
-	dc.b	3,3,0,0
-	DC.B	4,4,$59,0
-	dc.b	5,5,2,0
-	DC.B	6,6,7,0
-	dc.b	7,7,$F8,$FF
+	dc.b	1,0,1,0
+	DC.B	2,0,$EE,0
+	dc.b	3,0,0,0
+	DC.B	4,0,$59,0
+	dc.b	5,0,2,0
+	DC.B	6,0,7,0
+	dc.b	7,0,$F8,0
 vols:
-	DC.B	8,8
+	DC.B	8,0
 vol1	dc.b	$E,0
-	DC.B	9,9
+	DC.B	9,0
 vol2	dc.b	$E,0
-	DC.B	$A,$A
+	DC.B	$A,0
 vol3	dc.b	$F,0
+
+    even
 
     bss
 ; mouse vector
@@ -924,4 +1047,6 @@ screen_len equ *-s
 
 ; screen address
 screen:
+    ds.l 1
+scrollscraddr:
     ds.l 1
