@@ -783,6 +783,13 @@ lines   equ     227
 
 ; test: try to feed scroller data from the right
 ; 2 planes
+; actually needs to be put *after* the scroller
+; so:
+; the 64 line scroller requires 128 lines, starting at top 
+; -> 1-128 for scroller, then ~6 lines of new data from the right
+; the scroller can then simply be the lower 64 lines and
+; probably there will be cycles available for some bg color foo
+; (could lead to some parallax scrolling effect or so)
     lea raw_font,a4
     move.l scrollscraddr,a6
     ;; right of the righmost pixel, spilling into the next line
@@ -797,15 +804,6 @@ lines   equ     227
     nop
     nop
     nop
-
-    ;next try: shift by 1 word
-    ; 2 planes 
-    ; movea.l scrollscraddr,a6
-    ;nop
-    ;rept 11
-    ;move.l 8(a6),(a6)+
-    ;addq #4,a6
-    ;endr ; 352 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1142,6 +1140,37 @@ shift_one:
 
     lea 24(a1),a1 ; next line, 24 bytes per line
     dbra d7,shift_line
+    rts
+
+prepare_font:
+    ; load the 8x8 font from the tos rom
+    dc.w $a000
+    ; in a0 (and d0) ptr to line-a structure
+    move.l $54(a0),a0 ; font header (we assume that the first is the system 8x8 font)
+    move.l 68(a0),a0 ; actual font data, which is 256 characters, 
+    ; ordering is: 1 byte first line of first char, next byte is first line of second char, 
+    ; ..., 256th byte is first line of 256th char, 257th byte is second line of 1st char, ... 
+    lea font,a1
+    ; we blow up the 8x8 font to 64x64 (basically: every bit becomes a byte)
+
+    move.l #$ff000000,d2
+
+    moveq #7,d0
+.tstbit    
+    move.w (a0),d1
+    btst.b d0,d1
+    beq.s .iszero
+
+
+
+    dbra d0,.tstbit
+
+.iszero:
+
+
+
+    dbra d0,.tstbit
+
     rts
 
     data
