@@ -138,6 +138,12 @@ b_lines equ 228
 
     endr
 
+; save the initial sprite position
+    move.l a6,a1
+    add.l #24,a1
+    sub.l #230*4,a1
+    move.l a1,spr_position_addr
+
 ; upper border
     rept 10
     ; the leftmost pixel (in hatari at least) is here 
@@ -342,6 +348,19 @@ b_lines equ 228
     move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
 
     endr
+
+    ; initially save the sprite background
+    lea spr_bg,a0
+    rept 16
+    movem.l (a1),d0-d3
+    movem.l d0-d3,(a0)
+    lea 16(a0),a0
+    lea 230(a1),a1
+    endr
+
+    lea raw_spr_cursor,a0
+    lea spr_cursor,a1
+    jsr prepare_sprite
 
 ; fill the screen
 ;    move.w #screen_len/4-1,d1 ; longword = 4 bytes each
@@ -585,9 +604,74 @@ my_70:
 ;    nop
 ;    endr ; total of 4263 nops
 
+; optional code in the spare cycles start
+; sprite code
+    lea spr_cursor,a3 ; 2 mask + 4 planes, 16 lines, 16 shifts
+    ; todo: pick the correct shift
+    lea spr_bg,a5 ; background buffer 16*16 bytes
+    movea.l spr_position_addr,a6 ; screen address
 
-    ; add the remaining cycles 4263
-    dcb.w 4263,$4e71
+    rept 16
+; restore bg
+    movem.l (a5),d0-d3
+    movem.l d0-d3,(a6)
+; todo: adjust screen addr to new position
+    movem.l (a6),d0-d3
+    move.l d0,(a5)+
+    move.l d1,(a5)+
+    move.l d2,(a5)+
+    move.l d3,(a5)+ ; this seems faster than the "movem + add" version
+    ;movem.l d0-d3,(a5)
+    ;add.l #16,a5 ; next line
+    movem.l (a3)+,d0-d3/a0-a1 ; 2 mask + 4 planes
+    movem.l (a6),d4-d7 ; 4 planes
+    and.l d0,d4 ; plane 1+2 left
+    and.l d0,d5 ; plane 3+4 left
+    and.l d1,d6 ; plane 1+2 right
+    and.l d1,d7 ; plane 3+4 right
+    or.l d2,d4
+    or.l d3,d5
+    move.l a0,d0
+    or.l d0,d6
+    move.l a1,d0
+    or.l d0,d7
+    movem.l d4-d7,(a6)
+    lea.l 230(a6),a6
+    endr ; 6208 cycles
+
+;    lea spr_cursor_mask,a4
+;    lea spr_cursor_data,a3
+;    lea spr_bg,a5
+;    movea.l spr_position_addr,a6
+;
+;    rept 16
+;; restore bg
+;    move.l (a5),(a6)
+;    move.l 4(a5),8(a6)
+;; store bg
+;    move.l (a6),d0
+;    move.l 8(a6),d1
+;    move.l d0,(a5)+
+;    move.l d1,(a5)+
+;    ; unfortunately, movem.l d0-d1,(a5)+ is not supported
+;; mask
+;    movem.l (a4)+,d2-d3
+;    and.l d2,d0
+;    and.l d3,d1
+;; sprite data
+;    movem.l (a3)+,d2-d3
+;    or.l d2,d0
+;    or.l d3,d1
+;    move.l d0,(a6)
+;    move.l d1,8(a6)
+
+;    lea.l 230(a6),a6 ; next line
+;    endr ; 3584 cycles
+
+; optional code end - 6400+12+12+20 cycles = 6444 cycles = 1611 nops
+    ; add the remaining cycles to a total of 4263 nops
+    ;dcb.w 4263,$4e71
+    dcb.w 2652,$4e71
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -697,21 +781,39 @@ lines   equ     227
 
     ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
 
+; test: try to feed scroller data from the right
+; 2 planes
+    lea raw_font,a4
+    move.l scrollscraddr,a6
+    ;; right of the righmost pixel, spilling into the next line
+    ;lea 224(a6),a6
+    lea 216(a6),a6
+
+    rept 11
+    move.l (a4)+,(a6)
+    lea 230(a6),a6
+    endr
+    nop
+    nop
+    nop
+    nop
+
     ;next try: shift by 1 word
-    ; this is only half a line :(
-    movea.l scrollscraddr,a6
-    rept 14
-    move.w 8(a6),(a6)+
-    addq #6,a6
-    endr ; 336 cycles
+    ; 2 planes 
+    ; movea.l scrollscraddr,a6
+    ;nop
+    ;rept 11
+    ;move.l 8(a6),(a6)+
+    ;addq #4,a6
+    ;endr ; 352 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
     move.b  d3,(a0) ; 8 cycles
 
     dcb.w   13,$4e71 ; 13*4 = 52 cycles
-    ;dcb.w   8,$4e71
-    ;eor.w   #$0f0,$ffff8240.w
+    ;move.l 8(a6),(a6)+ ; 12.
+    ;addq #4,a6
 
 * EXTRA!
     move.b  d3,(a1) ; 8 cycles
@@ -719,7 +821,9 @@ lines   equ     227
     move.b  d4,(a1) ; 8 cycles
 
 * BUST BOTTOM BORDER...
-    dcb.w   8,$4e71 ; 8*4 = 32 cycles
+    ;dcb.w   8,$4e71 ; 8*4 = 32 cycles
+    dcb.w   3,$4e71 ; 12 cycles
+    movea.l scrollscraddr,a6
     move.b  d4,(a0) ; 8 cycles
     move.b  d3,(a0) ; 8 cycles
 
@@ -735,35 +839,45 @@ bot_lines       equ     28
     move.b  d3,(a1)         ; to monochrome
     move.b  d4,(a1)         ; to lo-res
 
-    ;dcb.w   89,$4e71
+    ;dcb.w   89,$4e71 ; 356 cycles
 
     ;nop
     ;nop
     ;nop
     ;nop
-    move.w   #$0f0,$ffff8240.w
+    ;;move.w   #$0f0,$ffff8240.w ; 16 cycles
 
-    rept 14
-    move.w 8(a6),(a6)+
-    addq #6,a6
-    endr ; 336 cycles
+    ;rept 14
+    ;move.w 8(a6),(a6)+
+    ;addq #6,a6
+    ;endr ; 336 cycles
+
+    nop
+    rept 11
+    move.l 8(a6),(a6)+
+    addq #4,a6
+    endr ; 352 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
     move.b  d3,(a0)
 
-    dcb.w   9,$4e71
-    move.w   #$000,$ffff8240.w
+    ;dcb.w   13,$4e71 ; 52 cycles
+    move.l 8(a6),(a6)+ ; 12.
+    addq #4,a6
+    move.w 8(a6),(a6)+ ; 12.5
+    nop
 
 * EXTRA!
     move.b  d3,(a1)
     nop
     move.b  d4,(a1)
 
-    dcb.w   12,$4e71
-
-    ;dcb.w   7,$4e71
-    ;eor.w   #$0f0,$ffff8240.w
+    ; dcb.w   12,$4e71 ; 48 cycles
+    move.w 8(a6),(a6)+ ; 13.
+    addq #4,a6
+    move.l 8(a6),(a6)+ ; 14./28, 14 to go
+    ; need to adjust a6 addq #4,a6
 
 ; second line
     nop
@@ -773,26 +887,50 @@ bot_lines       equ     28
 
     ;dcb.w   89,$4e71
 
+    ;nop
+    ;nop
+    ;addq #6,a6
+    ;rept 14
+    ;move.w 8(a6),(a6)+
+    ;addq #6,a6
+    ;endr ; 336 cycles
+
+    addq #4,a6
+    rept 10
+    move.l 8(a6),(a6)+
+    addq #4,a6
+    endr ; 320 cycles - 24./28
+    move.l 8(a6),(a6)+ ; 25.
     nop
-    nop
-    addq #6,a6
-    rept 14
-    move.w 8(a6),(a6)+
-    addq #6,a6
-    endr ; 336 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
     move.b  d3,(a0)
 
-    dcb.w   13,$4e71
+    ; dcb.w   13,$4e71 ; 52 cycles
+    addq #4,a6
+    move.l 8(a6),(a6)+ ; 26.
+    addq #4,a6
+    nop
+    nop
+    nop
 
 * EXTRA!
     move.b  d3,(a1)
     nop
     move.b  d4,(a1)
 
-    dcb.w   12,$4e71
+    ;dcb.w   12,$4e71 ; 48 cycles
+    move.l 8(a6),(a6)+ ; 27.
+    ;addq #4,a6
+    ; 28. column is not there yet..., so we add 4, then 8 (to skip the last column completely)
+    ;  and then 6 for the extra 6 bytes per line
+    lea 18(a6),a6
+    ;move.l (a4)+,(a6)+ ; new data in a4...
+    nop
+    nop
+    nop
+    nop
 
     endr ; same as before, 512 cycles per line
 
@@ -941,7 +1079,158 @@ inp:
     addq.l  #2,sp
     rts
 
+; prepare 16x16 sprite data, i.e. create 16 shifted versions and reorder words to match the screen planes
+; input: a0 - mask + sprite data (16x dc.w mask,plane1,plane2,plane3,plane4)
+;        a1 - where to put the prepared mask+data
+prepare_sprite:
+    moveq #15,d7 ; 16 lines
+shift_line:
+    moveq.l #$ffffffff,d0 ; mask needs to be filled with $ffff
+    moveq.l #0,d1
+    moveq.l #0,d2
+    moveq.l #0,d3
+    moveq.l #0,d4
+    move.w (a0)+,d0
+    move.w (a0)+,d1
+    move.w (a0)+,d2
+    move.w (a0)+,d3
+    move.w (a0)+,d4
+    ;movem.w (a0)+,d0-d4
+    ; d0.w: mask; d1..d4.w: 4 planes
+    swap d0
+    swap d1
+    swap d2
+    swap d3
+    swap d4
+
+    moveq #16-1,d6 ; 16 shifts
+    moveq #0,d5 ; shift offset
+shift_one:
+; reorder the data to match the planes
+; 1. mask (is somewhat redundant, repeats the mask pattern 2 times)
+    swap d0
+    move.w d0,0(a1,d5)
+    move.w d0,2(a1,d5)
+    swap d0
+    move.w d0,4(a1,d5)
+    move.w d0,6(a1,d5)
+    swap d1
+    move.w d1,8(a1,d5)
+    swap d1
+    move.w d1,16(a1,d5)
+    swap d2
+    move.w d2,10(a1,d5)
+    swap d2
+    move.w d2,18(a1,d5)
+    swap d3
+    move.w d3,12(a1,d5)
+    swap d3
+    move.w d3,20(a1,d5)
+    swap d4
+    move.w d4,14(a1,d5)
+    swap d4
+    move.w d4,22(a1,d5)
+
+    ror.l #1,d0
+    ror.l #1,d1
+    ror.l #1,d2
+    ror.l #1,d3
+    ror.l #1,d4
+
+    add.w #384,d5 ; 1 sprite shift uses 16 lines * (8 bytes + 16 bytes) 
+    dbra d6,shift_one
+
+    lea 24(a1),a1 ; next line, 24 bytes per line
+    dbra d7,shift_line
+    rts
+
     data
+
+raw_spr_cursor:
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0000,$0F00,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $0FFF,$f000,$0000,$f000,$0000
+
+raw_font: ; 2 planes font, 2 words per line, 64 lines
+; left part of an A
+    dc.w $0001,$0001
+    dc.w $0001,$0001
+    dc.w $0003,$0003
+    dc.w $0003,$0003
+    dc.w $0003,$0003
+    dc.w $0003,$0003
+    dc.w $0007,$0007
+    dc.w $0007,$0007
+    dc.w $0007,$0007
+    dc.w $0007,$0007
+    dc.w $000E,$000E
+    dc.w $000E,$000E
+    dc.w $000E,$000E
+    dc.w $000E,$000E
+    dc.w $001C,$001C
+    dc.w $001C,$001C
+    dc.w $001C,$001C
+    dc.w $001C,$001C
+    dc.w $0038,$0038
+    dc.w $0038,$0038
+    dc.w $0038,$0038
+    dc.w $0038,$0038
+    dc.w $0070,$0070
+    dc.w $0070,$0070
+    dc.w $0070,$0070
+    dc.w $0070,$0070
+    dc.w $00E0,$00E0
+    dc.w $00E0,$00E0
+    dc.w $00E0,$00E0
+    dc.w $00E0,$00E0
+    dc.w $01C0,$01C0
+    dc.w $01C0,$01C0
+    dc.w $01FF,$01FF
+    dc.w $01FF,$01FF
+    dc.w $03FF,$03FF
+    dc.w $03FF,$03FF
+    dc.w $0380,$0380
+    dc.w $0380,$0380
+    dc.w $0700,$0700
+    dc.w $0700,$0700
+    dc.w $0700,$0700
+    dc.w $0700,$0700
+    dc.w $0E00,$0E00
+    dc.w $0E00,$0E00
+    dc.w $0E00,$0E00
+    dc.w $0E00,$0E00
+    dc.w $1C00,$1C00
+    dc.w $1C00,$1C00
+    dc.w $1C00,$1C00
+    dc.w $1C00,$1C00
+    dc.w $3800,$3800
+    dc.w $3800,$3800
+    dc.w $3800,$3800
+    dc.w $3800,$3800
+    dc.w $7000,$7000
+    dc.w $7000,$7000
+    dc.w $7000,$7000
+    dc.w $7000,$7000
+    dc.w $E000,$E000
+    dc.w $E000,$E000
+    dc.w $E000,$E000
+    dc.w $E000,$E000
+    dc.w $C000,$C000
+    dc.w $C000,$C000
+
 mouse_params:
     dc.b    0,1,1,1
 my_pal:
@@ -1027,7 +1316,12 @@ blink_rate:
 curr_blink:
     ds.w 1
 
-    even
+spr_cursor:
+    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+
+spr_bg:
+    ds.l 4*16 ; 4 planes * 16 lines
+
 ; the new screen address
 scrn:
     ds.b 256 ; byte boundary (word boundary (i.e. bit 0 = 0) in the msb!)
@@ -1047,6 +1341,8 @@ screen_len equ *-s
 
 ; screen address
 screen:
+    ds.l 1
+spr_position_addr:
     ds.l 1
 scrollscraddr:
     ds.l 1
