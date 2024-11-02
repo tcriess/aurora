@@ -20,12 +20,17 @@ vector  equ     $fffffa17
 ; count lines with timer b
 b_lines equ 228
 
+bot_lines       equ     28
+
 ; into supervisor
     clr.l -(sp)
     move.w #$20,-(sp)
     trap #1
     addq.l #6,sp
     move.l d0,-(sp) ; put the old stack pointer on top
+
+    jsr prepare_font
+    jsr prepare_scrolltext
 
 ; timer c off (conditionally if keep_c == 0)
     ifeq keep_c
@@ -51,16 +56,40 @@ b_lines equ 228
 ;    move.l $134.w,(a0)+            ; timer A vector
 ;    move.l $120.w,(a0)+            ; timer B vector
 
+; get the (new) screen address 2 (make sure it has the lower byte = 0)
+    move.l #scrn2,d0
+    add.l #255,d0
+    clr.b d0
+    move.l d0,screen2
+    move.l d0,d1
+    move.l d0,a5
+    lsr.l #8,d0
+    move.w d0,hw_screen2
+    add.l #160+230*(27+200+bot_lines-64),d1
+    addq.l #4,d1 ; planes 3+4 instead of 1+2
+    move.l d1,scrollscraddr2 ; we start drawing in scrollscraddr2
+    move.l d1,scrollscraddr
+
 ; get the (new) screen address (make sure it has the lower byte = 0)
     move.l #scrn,d0
     add.l #255,d0
     clr.b d0 ; clear the lower byte
-    move.l d0,screen ; and store the result as the new screen address (this is actually "somewhere" beween "scrn" and "s")
+    move.l d0,screen1 ; and store the result as the new screen address (this is actually "somewhere" beween "scrn" and "s")
+    move.l d0,screen
     move.l d0,a6 ; also, store it in a6 to put some data in
+    move.l d0,d2
+    lsr.l #8,d2
+    move.w d2,hw_screen1
 
 ; set the new (larger) screen address
     move.l d0,d1
+
+    add.l #160+230*(27+200+bot_lines-64),d0 ; scroller is at address screenstart + 160 (first line) + 230 * 27 (upper border) + 230 * 228 (at the very end) - 230 * 64
+    addq.l #4,d0 ; planes 3+4 instead of 1+2
+    move.l d0,scrollscraddr1
+
     moveq #-1,d0
+    ; new screen still in d1
     jsr set_scrn
 
 ; set the new palette
@@ -69,9 +98,11 @@ b_lines equ 228
 
     ; sooo, mal etwas grafik auf den screen
     lea 160(a6),a6 ; first line, 160 bytes, skip it, it is somehow shifted anyway
+    lea 160(a5),a5
     
     ; now, there are 27 lines of the lower border
-    rept 27
+    ; we fill 19 lines now, then 8 lines with bricks
+    rept 19
     ; the leftmost pixel (in hatari at least) is here 
     ; move.l #$04000400,(a6)+
     ; move.l #$04000400,(a6)+
@@ -130,6 +161,130 @@ b_lines equ 228
     move.l #0,(a6)+
     move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
     move.l #0,(a6)+ ; #$00010001,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
+
+    endr
+
+    rept 4
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #$000f0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$fff00000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
+
+    endr
+
+    rept 4
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #$000f0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$00f0ff00,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
@@ -144,8 +299,7 @@ b_lines equ 228
     sub.l #230*4,a1
     move.l a1,spr_position_addr
 
-; upper border
-    rept 10
+    rept 200
     ; the leftmost pixel (in hatari at least) is here 
     ; move.l #$04000400,(a6)+
     ; move.l #$04000400,(a6)+
@@ -153,78 +307,11 @@ b_lines equ 228
     move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
+    move.l #$000f0000,(a6)+
+    move.l #$00000000,(a6)+
 ; draw a left border
-    move.l #$0fff0fff,(a6)+
-    move.l #$0fff0fff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-; draw a right border
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$f000f000,(a6)+
-    move.l #$f000f000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
-    move.l #0,(a6)+ ; #$00010001,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
-
-    endr
-
-    rept 180
-    ; the leftmost pixel (in hatari at least) is here 
-    ; move.l #$04000400,(a6)+
-    ; move.l #$04000400,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-; draw a left border
-    move.l #$0ff00ff0,(a6)+
-    move.l #$0ff00ff0,(a6)+
+    move.l #$0000f000,(a6)+
+    move.l #$00000000,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
@@ -262,10 +349,10 @@ b_lines equ 228
     move.l #0,(a6)+
     move.l #0,(a6)+
 ; draw a right border
-    move.l #$000f000f,(a6)+
-    move.l #$000f000f,(a6)+
-    move.l #$f000f000,(a6)+
-    move.l #$f000f000,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #$00f00f00,(a6)+
+    move.l #$00000000,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
@@ -278,11 +365,9 @@ b_lines equ 228
     move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
 
     endr
-
-    move.l a6,scrollscraddr
 
 ; lower border
-    rept 10
+    rept 4
     ; the leftmost pixel (in hatari at least) is here 
     ; move.l #$04000400,(a6)+
     ; move.l #$04000400,(a6)+
@@ -290,52 +375,52 @@ b_lines equ 228
     move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
+    move.l #$000f0000,(a6)+
+    move.l #$00000000,(a6)+
 ; draw a left border
-    move.l #$0fff0fff,(a6)+
-    move.l #$0fff0fff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
 ; draw a right border
-    move.l #$ffffffff,(a6)+
-    move.l #$ffffffff,(a6)+
-    move.l #$f000f000,(a6)+
-    move.l #$f000f000,(a6)+
+    move.l #$0000ffff,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$00f0ff00,(a6)+
+    move.l #$00000000,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
     move.l #0,(a6)+
@@ -348,6 +433,83 @@ b_lines equ 228
     move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
 
     endr
+
+    rept 4
+    ; the leftmost pixel (in hatari at least) is here 
+    ; move.l #$04000400,(a6)+
+    ; move.l #$04000400,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #$000f0000,(a6)+
+    move.l #$00000000,(a6)+
+; draw a left border
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+; draw a right border
+    move.l #$ffff0000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #$fff00000,(a6)+
+    move.l #$00000000,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
+    move.l #0,(a6)+ ; #$00010001,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.l #0,(a6)+
+    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
+
+    endr
+
+    move.l screen1,a6
+    move.l screen2,a5
+
+    ; copy the contents of screen1 to screen2
+    ; 160 + 230*27 + 230 * 200 + 230*bot_lines bytes
+    move.w #(160+230*27+230*200+230*bot_lines)/4-1,d7
+.cpyscr:
+    move.l (a6)+,(a5)+
+    dbra d7,.cpyscr
 
     ; initially save the sprite background
     lea spr_bg,a0
@@ -361,6 +523,7 @@ b_lines equ 228
     lea raw_spr_cursor,a0
     lea spr_cursor,a1
     jsr prepare_sprite
+    ; jsr prepare_font
 
 ; fill the screen
 ;    move.w #screen_len/4-1,d1 ; longword = 4 bytes each
@@ -695,166 +858,108 @@ my_70:
     move.b  (a0),d0
     beq.s   .wait ; wait for video address low byte != 0
 
-    eor.w   #$f0f,$ffff8240.w ; do sth with palette bg color
+    eor.w   #$f0f,$ffff8240.w ; do sth with palette bg color (remove this in production!)
 
     sub.w   d0,d1 ; d0 <> 0, d1 = 16 => d1 = 16 - d0
     lsl.w   d1,d0 ; probably some trick to sync with the correct number of cycles without hassle (i.e. "synchronize" the cpu)
+
+    ; SYNC is done here!
     
-    eor.w   #$f0f,$ffff8240.w ; reset palette bg color
-
-    ;move.l screen,a0
-    ;eor.w #$ffff,160(a0)
-    ;; 40 cycles
-
-;; cycle count...
-;    lea curr_blink,a0
-;    subq.w #1,(a0)
-;    bne.s noblink ; 8 or 10 cycles
-;    move.w blink_rate,(a0)
-;    move.l screen,a0
-;    eor.w #$ffff,(a0)
-;    bra.s blinkcont ; this branch has a total of 20+20+16+10=66 cycles - but this branch takes 2 cycles less (?) when bne'ing (8 cycles)
-;noblink:
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-;    nop
-
-;blinkcont:
-;; total 100 cycles
+    eor.w   #$f0f,$ffff8240.w ; reset palette bg color (remove this in production!)
 
     move.w #$820a,a0
     ; up to this point, after the wait: 58 cycles
 
-    rept 85
-    nop
-    endr ; 340 more cycles = total 398 cycles in the first line
 
-;; taking the blink into account (100 cycles less):
-;    rept 60
-;    nop
-;    endr ; 240 more cycles = total 398 cycles in the first line
+    movea.l scrollscraddr,a6 ; 20 c / 5 nops
+    move.l font_addr1,a3
+    move.l font_addr2,a4
+    move.w fontoffset1,d4
+    move.w fontoffset2,d5
+    add.w d4,a3
+    add.w d5,a4
 
-lines   equ     227
+    movea.l scrollscraddr,a6 ; put the start address of the first line of the scroller in a6
+    move.l a6,a5
+    lea 216(a5),a5 ; end of the line, this is where we put the new char data
 
-    rept    lines
+;    ; we are in the first line, we'll do some initialization stuff for the scroller here
+;    movea.l scrollscraddr,a6 ; put the start address of the first line of the scroller in a6
+;    move.l a6,a5
+;    lea 216(a5),a5 ; end of the line, this is where we put the new char data
+;    lea font,a4 ; start of font
+;    move.l scrollpos,a3
+;    move.w (a3),d0
+;
+;    bge.s .contscroll
+;
+;    lea scrolltextbuffer,a3
+;    move.w #0,d0
+;    bra.s .contscroll2
+;.contscroll:
+;    addq.l #2,a3
+;    dcb.w   5,$4e71 ; 5*4 = 20 cycles
+;.contscroll2:
+;    move.l a3,scrollpos
+;    add.w d0,a4
+;    ;lea 0(a4,d0.w),a4 ; not 12! it is 16 cycles!
+;    move.l font_addr1,a3
+;    add.w d0,a3
+;    move.l font_addr2,a4
+;    add.w d0,a4
+    ; move.l a4,a3
 
-    nop
+    ; a6: scroller start, used to do the byte shifting
+    ; a5: start of the rightmost word to feed in new data
+    ; a4: new data (for now: first character in font)
 
-* LEFT HAND BORDER!
-    move.b  d3,(a1)         ; to monochrome 8 cycles
-    move.b  d4,(a1)         ; to lo-res     8 cycles    
+    dcb.w   50,$4e71 ; total 368 cycles in the first line after sync
+    ;dcb.w   85,$4e71 ; 340 cycles = total 368 cycles in the first line after sync
 
-    dcb.w   89,$4e71 ; 90*4 = 360 cycles (either 90 here, or 89 here and one single nop before the monochrome/color switch, this seems to make it work on all wakestates!)
-
-* RIGHT AGAIN...
-    move.b  d4,(a0) ; 8 cycles
-    move.b  d3,(a0) ; 8 cycles
-
-    dcb.w   13,$4e71 ; 13*4 = 52 cycles
-
-* EXTRA!
-    move.b  d3,(a1) ; 8 cycles
-    nop ; 4 cycles
-    move.b  d4,(a1) ; 8 cycles
-
-    dcb.w   12,$4e71 ; 12*4 = 48 cycles
-    endr ; 512 cycles per line
-
-    * FINAL LINE...
-    nop
-* LEFT HAND BORDER!
-    move.b  d3,(a1)         ; to monochrome 8 cycles
-    move.b  d4,(a1)         ; to lo-res 8 cycles
-
-    ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
-
-; test: try to feed scroller data from the right
-; 2 planes
-; actually needs to be put *after* the scroller
-; so:
-; the 64 line scroller requires 128 lines, starting at top 
-; -> 1-128 for scroller, then ~6 lines of new data from the right
-; the scroller can then simply be the lower 64 lines and
-; probably there will be cycles available for some bg color foo
-; (could lead to some parallax scrolling effect or so)
-    lea raw_font,a4
-    move.l scrollscraddr,a6
-    ;; right of the righmost pixel, spilling into the next line
-    ;lea 224(a6),a6
-    lea 216(a6),a6
-
-    rept 11
-    move.l (a4)+,(a6)
-    lea 230(a6),a6
-    endr
-    nop
-    nop
-    nop
-    nop
-
-* RIGHT AGAIN...
-    move.b  d4,(a0) ; 8 cycles
-    move.b  d3,(a0) ; 8 cycles
-
-    dcb.w   13,$4e71 ; 13*4 = 52 cycles
-    ;move.l 8(a6),(a6)+ ; 12.
-    ;addq #4,a6
-
-* EXTRA!
-    move.b  d3,(a1) ; 8 cycles
-    nop ; 4 cycles
-    move.b  d4,(a1) ; 8 cycles
-
-* BUST BOTTOM BORDER...
-    ;dcb.w   8,$4e71 ; 8*4 = 32 cycles
-    dcb.w   3,$4e71 ; 12 cycles
-    movea.l scrollscraddr,a6
-    move.b  d4,(a0) ; 8 cycles
-    move.b  d3,(a0) ; 8 cycles
-
-; total of 512 cycles here also
-
-* BOTTOM BORDER LEFT & RIGHTS!
-; what hatari displays is about 48 lines, but this code only works with 44... (respectively the possibility to exit is lost)
-bot_lines       equ     28
-    rept    bot_lines/2
-
-    nop
+; every line of the scroller needs *2* lines of byte shifting, unfortunately
+; so we start the shifting here and go on for the next 128 lines to have a 64 lines-scroller
+; the following rept contains 2 lines
+    rept 64
+    nop ; start of with a 4 cycles nop
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome
     move.b  d4,(a1)         ; to lo-res
 
-    ;dcb.w   89,$4e71 ; 356 cycles
-
-    ;nop
-    ;nop
-    ;nop
-    ;nop
-    ;;move.w   #$0f0,$ffff8240.w ; 16 cycles
-
-    ;rept 14
-    ;move.w 8(a6),(a6)+
-    ;addq #6,a6
-    ;endr ; 336 cycles
-
     nop
-    rept 11
-    move.l 8(a6),(a6)+
+    
+    move.l 8(a6),(a6)+ ; 1.
     addq #4,a6
-    endr ; 352 cycles
+
+    move.l 8(a6),(a6)+ ; 2.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 3.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 4.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 5.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 6.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 7.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 8.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 9.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 10.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 11.
+    addq #4,a6
+    ; 356 cycles (88 of 224 bytes are handled (for 1 line))
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
@@ -883,21 +988,38 @@ bot_lines       equ     28
     move.b  d3,(a1)         ; to monochrome
     move.b  d4,(a1)         ; to lo-res
 
-    ;dcb.w   89,$4e71
+    addq #4,a6 ; adjustment which was missing from above
 
-    ;nop
-    ;nop
-    ;addq #6,a6
-    ;rept 14
-    ;move.w 8(a6),(a6)+
-    ;addq #6,a6
-    ;endr ; 336 cycles
+    move.l 8(a6),(a6)+ ; 15.
+    addq #4,a6
 
+    move.l 8(a6),(a6)+ ; 16.
     addq #4,a6
-    rept 10
-    move.l 8(a6),(a6)+
+
+    move.l 8(a6),(a6)+ ; 17.
     addq #4,a6
-    endr ; 320 cycles - 24./28
+
+    move.l 8(a6),(a6)+ ; 18.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 19.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 20.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 21.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 22.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 23.
+    addq #4,a6
+
+    move.l 8(a6),(a6)+ ; 24.
+    addq #4,a6
+
     move.l 8(a6),(a6)+ ; 25.
     nop
 
@@ -923,6 +1045,7 @@ bot_lines       equ     28
     ;addq #4,a6
     ; 28. column is not there yet..., so we add 4, then 8 (to skip the last column completely)
     ;  and then 6 for the extra 6 bytes per line
+    ; (the last column will then be filled by the code in the following lines, feeding character data from the right)
     lea 18(a6),a6
     ;move.l (a4)+,(a6)+ ; new data in a4...
     nop
@@ -930,27 +1053,293 @@ bot_lines       equ     28
     nop
     nop
 
+    endr
+
+    ; until the bottom border we have 227 lines to process, 128 are done, so there are 99 lines left
+
+; feed in new font data from the right at the scroller position
+
+; for the 8-bit-shift, try to replace this:
+;    move.l (a4)+,(a5) ; 24 cycles
+; with something like this:
+;    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+;    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+;    move.l d0,(a5) ; 12/16 cycles, total of 40/44 cycles (instead of 20/24)
+; if a3=a4 as before, the result should be the same!
+
+; 129.-136. line: feed in 8 lines at a time
+    rept 8
+    nop
+
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome 8 cycles
+    move.b  d4,(a1)         ; to lo-res     8 cycles
+    ; now we have 356 cycles to copy data
+    ; 1. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,(a5) ; 12 cycles, total of 40 cycles (instead of 20)
+    ; 40
+    ; 2. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 84
+    ; 3. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,2*230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 128
+    ; 4. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,3*230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 172
+    ; 5. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,4*230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 216
+    ; 6. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,5*230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 260
+    ; 7. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,6*230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 304
+    ; 8. line
+    move.l (a3)+,d0 ; 12 cycles a3 points to the (left-)shifted previous character
+    or.l (a4)+,d0   ; 16(14) cycles a4 points to the (right-)shifted new character
+    move.l d0,7*230(a5) ; 16 cycles, total of 44 cycles (instead of 24)
+    ; 348
+    ; two nops to 356, or: advance the a5 address by 8 lines
+    lea 8*230(a5),a5
+
+* RIGHT AGAIN...
+    move.b  d4,(a0) ; 8 cycles
+    move.b  d3,(a0) ; 8 cycles
+
+    dcb.w   13,$4e71 ; 13*4 = 52 cycles
+
+* EXTRA!
+    move.b  d3,(a1) ; 8 cycles
+    nop ; 4 cycles
+    move.b  d4,(a1) ; 8 cycles
+
+    dcb.w   12,$4e71 ; 12*4 = 48 cycles
+    endr
+
+
+;; 129.-132. line, feed 16 lines of the scroller per line
+;    rept 4
+;    nop
+;
+;* LEFT HAND BORDER!
+;    move.b  d3,(a1)         ; to monochrome 8 cycles
+;    move.b  d4,(a1)         ; to lo-res     8 cycles    
+;
+;    move.l (a4)+,(a5) ; 1. line
+;    move.l (a4)+,230(a5) ; 2. line
+;    move.l (a4)+,2*230(a5) ; 3. line
+;    move.l (a4)+,3*230(a5) ; 4. line
+;    move.l (a4)+,4*230(a5) ; 5. line
+;    move.l (a4)+,5*230(a5) ; 6. line
+;    move.l (a4)+,6*230(a5) ; 7. line
+;    move.l (a4)+,7*230(a5) ; 8. line
+;    move.l (a4)+,8*230(a5) ; 9. line
+;    move.l (a4)+,9*230(a5) ; 10. line
+;    move.l (a4)+,10*230(a5) ; 11. line
+;    move.l (a4)+,11*230(a5) ; 12. line
+;    move.l (a4)+,12*230(a5) ; 13. line
+;    move.l (a4)+,13*230(a5) ; 14. line
+;    move.l (a4)+,14*230(a5) ; 15. line
+
+;    ; dcb.w   89,$4e71 ; 89*4 = 356 cycles (either 90 here, or 89 here and one single nop before the monochrome/color switch, this seems to make it work on all wakestates!)
+
+;* RIGHT AGAIN...
+;    move.b  d4,(a0) ; 8 cycles
+;    move.b  d3,(a0) ; 8 cycles
+
+;    move.l (a4)+,15*230(a5) ; 16. line
+;    lea 16*230(a5),a5
+;    dcb.w   5,$4e71 ; 20 cycles
+
+;    ; dcb.w   13,$4e71 ; 13*4 = 52 cycles
+
+;* EXTRA!
+;    move.b  d3,(a1) ; 8 cycles
+;    nop ; 4 cycles
+;    move.b  d4,(a1) ; 8 cycles
+
+;    dcb.w   12,$4e71 ; 12*4 = 48 cycles
+;    endr
+
+; 91 lines until the bottom border!
+    rept    91
+    nop
+
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome 8 cycles
+    move.b  d4,(a1)         ; to lo-res     8 cycles    
+
+    dcb.w   89,$4e71 ; 90*4 = 360 cycles (either 90 here, or 89 here and one single nop before the monochrome/color switch, this seems to make it work on all wakestates!)
+
+* RIGHT AGAIN...
+    move.b  d4,(a0) ; 8 cycles
+    move.b  d3,(a0) ; 8 cycles
+
+    dcb.w   13,$4e71 ; 13*4 = 52 cycles
+
+* EXTRA!
+    move.b  d3,(a1) ; 8 cycles
+    nop ; 4 cycles
+    move.b  d4,(a1) ; 8 cycles
+
+    dcb.w   12,$4e71 ; 12*4 = 48 cycles
+    endr ; 512 cycles per line
+
+* FINAL LINE...
+    nop
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome 8 cycles
+    move.b  d4,(a1)         ; to lo-res 8 cycles
+
+    dcb.w   43,$4e71
+
+    move.l  #$ffff8240,a3
+    lea     scrollerpalred1,a4
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+
+    ; dcb.w   89,$4e71 ; 89*4 = 356 cycles
+
+* RIGHT AGAIN...
+    move.b  d4,(a0) ; 8 cycles
+    move.b  d3,(a0) ; 8 cycles
+
+    dcb.w   13,$4e71 ; 13*4 = 52 cycles
+
+* EXTRA!
+    move.b  d3,(a1) ; 8 cycles
+    nop ; 4 cycles
+    move.b  d4,(a1) ; 8 cycles
+
+* BUST BOTTOM BORDER...
+; mh, the following seems to only work in wakestate 1 & 3
+;    dcb.w   8,$4e71 ; 8*4 = 32 cycles
+;    move.b  d4,(a0) ; 8 cycles
+;    move.b  d3,(a0) ; 8 cycles
+    dcb.w   8,$4e71 ; 8*4 = 32 cycles
+    move.b  d4,(a0) ; 8 cycles
+    nop
+    move.b  d3,(a0) ; 8 cycles
+
+; total of 512 cycles here also
+
+    rept    bot_lines
+
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome
+    move.b  d4,(a1)         ; to lo-res
+
+    dcb.w   43,$4e71
+    move.l  #$ffff8240,a3
+    lea     my_pal,a4
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+    move.l (a4)+,(a3)+
+
+    ; dcb.w   89,$4e71 ; 356 cycles
+
+* RIGHT AGAIN...
+    move.b  d4,(a0)
+    move.b  d3,(a0)
+
+    dcb.w   13,$4e71 ; 52 cycles
+* EXTRA!
+    move.b  d3,(a1)
+    nop
+    move.b  d4,(a1)
+
+    dcb.w   13,$4e71 ; 48 cycles
+    
     endr ; same as before, 512 cycles per line
 
     ; now, the time critical stuff is done, and we still have a few cycles for sound...
 
 ; start counter handling
     move.w curr_blink,d0
-    subq.w #1,d0
+    subq #1,d0
     tst.b d0
-    bne cont_blink
+    bne cont_blink3
 
-do_blink:
-    eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
+do_blink2:
+    ; eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
 
     snd_keyclick2
     move.w blink_rate,d0
     ;lsl.w #1,d0
 
-cont_blink:
+cont_blink3:
     move.w d0,curr_blink
 ; end counter handling
 
+    move.l scrollpos,a2
+    move.w -2(a2),d5
+    move.w (a2),d4
+    bge.s .contscroll3
+
+    lea scrolltextbuffer,a2 ; 12 c / 3 nops
+    move.w (a2),d4 ; 8 c / 2 nops
+
+;    bra.s .contscroll4 ; 12 c / 3 nops
+.contscroll3:
+
+;.contscroll4:
+    ;move.l a2,scrollpos ; 20 c / 5 nops
+
+; last thing before exiting: set new screen address in hw regs
+    and.b #1,d0
+    beq.s switch_scr1
+
+    move.w hw_screen2,d0
+    move.l scrollscraddr1,scrollscraddr
+    move.l #font,font_addr1
+    move.l #font,font_addr2
+    move.w d4,d5
+
+    addq.l #2,a2
+    move.l a2,scrollpos
+
+    bra.s switch_scr
+switch_scr1:
+    move.w hw_screen1,d0
+    move.l scrollscraddr2,scrollscraddr
+    move.l #font_shift_r,font_addr1
+    move.l #font_shift_l,font_addr2
+
+switch_scr:
+    move.w d4,fontoffset1
+    move.w d5,fontoffset2
+
+    move.l #$ff8201,a0
+    movep.w d0,0(a0)
+
+exit_vbi:
 ; restore registers
     movem.l (sp)+,d0-d7/a0-a6
     move.w  (a7)+,sr
@@ -1001,7 +1390,7 @@ init_screen:
     trap    #14             ; mouse off
     lea     12(sp),sp
 
-; get the logical screen address (mostly to make it easier to debug, as depac's mon messes with the phys base)
+; get the logical screen address (mostly to make it easier to debug, as devpac's mon messes with the phys base)
     move.w  #3,-(sp)
     trap    #14
     addq.l  #2,sp
@@ -1142,41 +1531,262 @@ shift_one:
     dbra d7,shift_line
     rts
 
+; bit zip algorithm from fxtbook for 2 16 bit values
+; input d0.w [ a b c d e f g h i j k l m n o p ] d1.w [ A B C D E F G H I J K L M N O P ]
+; output d0.l [ a A b B c C d D e E f F g G h H ...]
+bit_zip16:
+    movem.l d2-d7,-(sp)
+
+    moveq #1,d3 ; m = 1
+    moveq #0,d4 ; s = 0
+    moveq #0,d2 ; x
+    moveq #15,d7 ; d7 = k, BITS_PER_LONG/2 = 16
+.bzloop:
+    move.l d0,d5
+    and.l d3,d5
+    lsl.l d4,d5
+    or.l d5,d2
+    addq #1,d4
+    move.l d1,d5
+    and.l d3,d5
+    lsl.l d4,d5
+    or.l d5,d2
+    lsl.l #1,d3
+
+    dbra d7,.bzloop
+    move.l d2,d0 ; return value
+    movem.l (sp)+,d2-d7
+    rts
+
+; bit zip algorithm from fxtbook for 2 8 bit values
+; input d0.b [ a b c d e f g h ] d1.b [ A B C D E F G H ]
+; output d0.w [ a A b B c C d D e E f F g G h H ]
+bit_zip8:
+    movem.l d2-d7,-(sp)
+
+    moveq #1,d3 ; m = 1
+    moveq #0,d4 ; s = 0
+    moveq #0,d2 ; x = 0
+    moveq #7,d7 ; d7 = k, BITS_PER_LONG/2 = 8
+.bzloop:
+    move.w d0,d5
+    and.w d3,d5
+    lsl.w d4,d5
+    or.w d5,d2
+    addq #1,d4
+    move.w d1,d5
+    and.w d3,d5
+    lsl.w d4,d5
+    or.w d5,d2
+    lsl.w #1,d3
+
+    dbra d7,.bzloop
+    move.w d2,d0 ; return value
+    movem.l (sp)+,d2-d7
+    rts
+
 prepare_font:
     ; load the 8x8 font from the tos rom
     dc.w $a000
     ; in a0 (and d0) ptr to line-a structure
-    move.l $54(a0),a0 ; font header (we assume that the first is the system 8x8 font)
-    move.l 68(a0),a0 ; actual font data, which is 256 characters, 
+    ; in a1: pointer to address table to font headers of system fonts
+    move.l 8(a1),a0 ; default font 8x16
+    
+    move.l 76(a0),a0 ; actual font data, which is 256 characters, 
     ; ordering is: 1 byte first line of first char, next byte is first line of second char, 
     ; ..., 256th byte is first line of 256th char, 257th byte is second line of 1st char, ... 
+    ; so, it is a 256x16 image, where we f.e. pick the character at x-position 65*8 (for "A")
     lea font,a1
-    ; we blow up the 8x8 font to 64x64 (basically: every bit becomes a byte)
+    ; we blow up the 8x16 font to 32x64 (basically: every bit becomes a nibble/byte), width is 32 bit/4 bytes/2 words/1 lw, height is 64 lines
+    ; storage is 1. line left half, 1. plane, 2. plane, 2. line left half, 1. plane, 2. plane, ..., 64. line left half, 1. plane, 2. plane, 1. line right half, ...
 
-    move.l #$ff000000,d2
+    move.l a0,a2 ; save the font data
+    lea pick_sysfont_chars,a3
 
-    moveq #7,d0
-.tstbit    
-    move.w (a0),d1
-    btst.b d0,d1
-    beq.s .iszero
+    moveq #31,d6 ; 32 chars
+.onechar:
+    move.l a2,a0
+    clr.w d0
+    move.b (a3)+,d0
+    add.w d0,a0
+    moveq #15,d7 ; 16 lines, font is 8x16
+.oneline:
+    moveq #0,d0
+    moveq #0,d1
+    move.b (a0),d0
+    add.l #256,a0 ; next line
+    move.b d0,d1
+    bsr bit_zip8
+    ; d0.w is now the doubled first line of the char
+    move.w d0,d1
+    bsr bit_zip16
+    ; d0.l is now the blown up line of the char
 
+    ; save it in d4
+    move.l d0,d4
+    ; left part
+    swap d0
+    moveq #0,d1
+    move.w d0,d1
+    bsr bit_zip16
+    ; d0.l left part blown up to 32 pixels
+    ; save it to d5
+    move.l d0,d5
+    moveq #0,d0
+    move.w d4,d0
+    moveq #0,d1
+    move.w d0,d1
+    bsr bit_zip16
 
+    ; now: d0.l is the right part blown up to 32 pixels, d5.l is the left part blown up to 32 pixels
 
-    dbra d0,.tstbit
+    ; now the first line needs to be reordered to 1st plane/2nd plane of left part and then offset to the right part 1st/2nd plane (2w * 64 lines = 256 bytes)
 
-.iszero:
+    ; plane 1
+    ; 1 line left
+    swap d5
+    move.w d5,0(a1) ; plane 1
+    move.w d5,4(a1) ; plane 1
+    move.w d5,8(a1) ; plane 1
+    move.w d5,12(a1) ; plane 1
+    ; 1 line left 2
+    swap d5
+    move.w d5,256(a1)
+    move.w d5,260(a1)
+    move.w d5,264(a1)
+    move.w d5,268(a1)
+    ; plane 2
+    ; 1 line left
+    swap d5
+    asr.w #3,d5
+    move.w d5,2(a1) ; plane 2
+    move.w d5,6(a1) ; plane 2
+    move.w d5,10(a1) ; plane 2
+    move.w d5,14(a1) ; plane 2
+    ; 1 line left 2
+    swap d5
+    asr.w #3,d5
+    move.w d5,258(a1)
+    move.w d5,262(a1)
+    move.w d5,266(a1)
+    move.w d5,270(a1)
 
+    ; plane 1
+    ; 1 line right
+    swap d0
+    move.w d0,512(a1) ; plane 1
+    move.w d0,516(a1) ; plane 1
+    move.w d0,520(a1) ; plane 1
+    move.w d0,524(a1) ; plane 1
+    ; 1 line right 2
+    swap d0
+    move.w d0,768(a1)
+    move.w d0,772(a1)
+    move.w d0,776(a1)
+    move.w d0,780(a1)
+    ; plane 2
+    ; 1 line right
+    swap d0
+    asr.w #3,d0
+    move.w d0,514(a1) ; plane 2
+    move.w d0,518(a1) ; plane 2
+    move.w d0,522(a1) ; plane 2
+    move.w d0,526(a1) ; plane 2
+    ; 1 line right 2
+    swap d0
+    asr.w #3,d0
+    move.w d0,770(a1)
+    move.w d0,774(a1)
+    move.w d0,778(a1)
+    move.w d0,782(a1)
 
+    add.l #16,a1
+    dbra d7,.oneline
+    ;addq #1,a2
+    ;add.l #256,a1
+    add.l #768,a1
+    ;move.l a2,a0
+    dbra d6,.onechar
 
-    dbra d0,.tstbit
+    ; next: create the 8-bit shifted variants after the regular font
+    lea font,a0
+    lea font_shift_r,a1
+    lea font_shift_l,a2
 
+    move.w #4*32*64*2-1,d7 ; 4x32 characters,64 lines,2 words per line
+.charshift:
+    move.w (a0)+,d0
+    move.w d0,d1
+    lsr.w #8,d0
+    move.w d0,(a1)+
+    lsl.w #8,d1
+    move.w d1,(a2)+
+    dbra d7,.charshift
+
+    rts
+
+prepare_scrolltext:
+    lea scrolltext,a0
+    lea scrolltextbuffer,a1
+
+    move.w #scrolltextsize-1,d7
+.onechar:
+    moveq #0,d0
+    move.b (a0)+,d0
+    ; sub.b #65,d0 ; subtract 'A'
+    ; mulu #fontcharactersize,d0 ; i.e. *256, and then we need to multiply *4 (for all 4 parts) we can do this better:
+    lsl.w #8,d0
+    lsl.w #2,d0
+    move.w d0,(a1)+
+    add.w #256,d0
+    move.w d0,(a1)+
+    add.w #256,d0
+    move.w d0,(a1)+
+    add.w #256,d0
+    move.w d0,(a1)+
+
+    dbra d7,.onechar
+    move.w #-1,(a1)
+    ; move.w -2(a1),prev_scrolltextentry
+    move.w #0,prev_scrolltextentry ; start with a space as the previous character
     rts
 
     data
 
-raw_spr_cursor:
+pick_sysfont_chars:
+    dc.b $20,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4a,$4b,$4c,$4d,$4e,$4f ; [ ],A,B,C,D,E,...,O
+    dc.b $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$2e,$2d,$21,$0e,$0f ; P,Q,...,Z,.,-,!,[atarileft],[atariright]
+
+
+spr_playbook:
+    dc.w 52,
+
+ani_spr_cursor:
+    dc.w 0,25,1,25,-1 ; sprite_no, delay (1/50s), ..., -1
+
+raw_sprites:
+; 0
+raw_spr_empty:
     dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+
+; 1
+raw_spr_cursor:
+    dc.w $0FFF,$0000,$f000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
@@ -1193,79 +1803,68 @@ raw_spr_cursor:
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $0FFF,$f000,$0000,$f000,$0000
 
-raw_font: ; 2 planes font, 2 words per line, 64 lines
-; left part of an A
-    dc.w $0001,$0001
-    dc.w $0001,$0001
-    dc.w $0003,$0003
-    dc.w $0003,$0003
-    dc.w $0003,$0003
-    dc.w $0003,$0003
-    dc.w $0007,$0007
-    dc.w $0007,$0007
-    dc.w $0007,$0007
-    dc.w $0007,$0007
-    dc.w $000E,$000E
-    dc.w $000E,$000E
-    dc.w $000E,$000E
-    dc.w $000E,$000E
-    dc.w $001C,$001C
-    dc.w $001C,$001C
-    dc.w $001C,$001C
-    dc.w $001C,$001C
-    dc.w $0038,$0038
-    dc.w $0038,$0038
-    dc.w $0038,$0038
-    dc.w $0038,$0038
-    dc.w $0070,$0070
-    dc.w $0070,$0070
-    dc.w $0070,$0070
-    dc.w $0070,$0070
-    dc.w $00E0,$00E0
-    dc.w $00E0,$00E0
-    dc.w $00E0,$00E0
-    dc.w $00E0,$00E0
-    dc.w $01C0,$01C0
-    dc.w $01C0,$01C0
-    dc.w $01FF,$01FF
-    dc.w $01FF,$01FF
-    dc.w $03FF,$03FF
-    dc.w $03FF,$03FF
-    dc.w $0380,$0380
-    dc.w $0380,$0380
-    dc.w $0700,$0700
-    dc.w $0700,$0700
-    dc.w $0700,$0700
-    dc.w $0700,$0700
-    dc.w $0E00,$0E00
-    dc.w $0E00,$0E00
-    dc.w $0E00,$0E00
-    dc.w $0E00,$0E00
-    dc.w $1C00,$1C00
-    dc.w $1C00,$1C00
-    dc.w $1C00,$1C00
-    dc.w $1C00,$1C00
-    dc.w $3800,$3800
-    dc.w $3800,$3800
-    dc.w $3800,$3800
-    dc.w $3800,$3800
-    dc.w $7000,$7000
-    dc.w $7000,$7000
-    dc.w $7000,$7000
-    dc.w $7000,$7000
-    dc.w $E000,$E000
-    dc.w $E000,$E000
-    dc.w $E000,$E000
-    dc.w $E000,$E000
-    dc.w $C000,$C000
-    dc.w $C000,$C000
-
 mouse_params:
     dc.b    0,1,1,1
-my_pal:
-    dc.w $0000,$0666,$0700,$0070,$0007,$0770,$0077,$0707
-    dc.w $0777,$0500,$0050,$0005,$0550,$0055,$0505,$0555
+my_pal: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0777 ; 0 %0000 bg
+    dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0000 ; 3 inital cursor color (black)
+    dc.w $0333 ; 4 scroller border left
+    dc.w $0333 ; 5 scroller border left
+    dc.w $0333 ; 6 scroller border left
+    dc.w $0333 ; 7 scroller border left
+    dc.w $0222 ; 8 scroller border right
+    dc.w $0222 ; 9 scroller border right
+    dc.w $0222 ; 10 scroller border right
+    dc.w $0222 ; 11 scroller border right
+    dc.w $0000 ; 12 scroller main color
+    dc.w $0000 ; 13 scroller main color
+    dc.w $0000 ; 14 scroller main color
+    dc.w $0000 ; 15 scroller main color
+
+    ;dc.w $0000,$0666,$0700,$0070,$0007,$0770,$0077,$0707
+    ;dc.w $0777,$0500,$0050,$0005,$0550,$0055,$0505,$0555
     ; incbin 'spr_pal.dat'
+
+scrollerpalred1:
+    dc.w $0611 ; 0 %0000 bg
+    dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0000 ; 3 inital cursor color (black)
+    dc.w $0300 ; 4 scroller border left
+    dc.w $0300 ; 5 scroller border left
+    dc.w $0300 ; 6 scroller border left
+    dc.w $0300 ; 7 scroller border left
+    dc.w $0200 ; 8 scroller border right
+    dc.w $0200 ; 9 scroller border right
+    dc.w $0200 ; 10 scroller border right
+    dc.w $0200 ; 11 scroller border right
+    dc.w $0500 ; 12 scroller main color
+    dc.w $0500 ; 13 scroller main color
+    dc.w $0500 ; 14 scroller main color
+    dc.w $0500 ; 15 scroller main color
+
+scrollerpalred2:
+    dc.w $0711 ; 0 %0000 bg
+    dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0000 ; 3 inital cursor color (black)
+    dc.w $0400 ; 4 scroller border left
+    dc.w $0400 ; 5 scroller border left
+    dc.w $0400 ; 6 scroller border left
+    dc.w $0400 ; 7 scroller border left
+    dc.w $0300 ; 8 scroller border right
+    dc.w $0300 ; 9 scroller border right
+    dc.w $0300 ; 10 scroller border right
+    dc.w $0300 ; 11 scroller border right
+    dc.w $0600 ; 12 scroller main color
+    dc.w $0600 ; 13 scroller main color
+    dc.w $0600 ; 14 scroller main color
+    dc.w $0600 ; 15 scroller main color
+
 vbicounter:
     dc.w 0
 
@@ -1317,7 +1916,31 @@ vol3	dc.b	$F,0
 
     even
 
+scrolltext:
+    dc.b 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+    ;dc.b 'HELLO_HELLO_HELLO__SILLYVENTURE__THIS_IS_A_FULLY_SYNCED_SCROLLER____NO_BLITTER____NO_STE___JUST_PLAIN_ST____THANKS_TO__'
+    ;dc.b 'LEONARD_FOR_THE_FANTASTIC_STRINKLER____THANKS_TO_GREY_AGAIN___THANKS_TO_ALL_THE_NICE_ATARI_PEOPLE_____________________'
+scrolltextsize equ *-scrolltext
+    even
+
+scrollpos: ; pointer to the current position inside scrolltextbuffer
+    dc.l scrolltextbuffer
+
+font_addr1:
+    dc.l font_shift_r
+font_addr2:
+    dc.l font_shift_l
+
     bss
+fontoffset1:
+    ds.w 1
+fontoffset2:
+    ds.w 1
+prev_scrolltextentry:
+    ds.w 1 ; when looking back the previous entry...
+scrolltextbuffer:
+    ds.w 4*scrolltextsize+1 ; 4 entries per character, last one is -1 to indicate the end
+
 ; mouse vector
 mouse_vec:
     ds.l 1
@@ -1351,6 +1974,26 @@ spr_cursor:
 spr_bg:
     ds.l 4*16 ; 4 planes * 16 lines
 
+fontcharactersize equ 256 ; the char in the font (which is only part of the full character...) takes up that many bytes: 2 words(planes) * 64 lines = 128 words = 256 bytes
+font:
+    ; 64x64, i.e. 2 planes * 2 lw * 64 per character, 32 characters
+    ; ordering is 1st word = 1st line 1st plane left, 2nd word is 1st line 2nd plane left
+    ;  3rd word is 2nd line 1st plane left, 4th word is 2nd line 2nd plane left
+    ; ...
+    ; all of that x3 because we need three copies of the font:
+    ; 1. normal: word1: (L1)(R1) word2: (L2)(R2) where Lx and Rx are bytes of the left half and the right half of the char in plane x
+    ; 2. shifted to the right (zeroed out): word1: 00(L1) word2: 00(L2)
+    ; 3. shifted to the left  (zeroed out): word1: (R1)00 word2: (R2)00
+    ;  
+    ds.l 2*2*64*32 ;
+font_shift_r:
+    ds.l 2*2*64*32
+font_shift_l:
+    ds.l 2*2*64*32
+
+lineainp:
+    ds.l 1
+
 ; the new screen address
 scrn:
     ds.b 256 ; byte boundary (word boundary (i.e. bit 0 = 0) in the msb!)
@@ -1368,10 +2011,30 @@ s:
 ; total screen length in bytes
 screen_len equ *-s
 
+; the new screen address
+scrn2:
+    ds.b 256 ; byte boundary (word boundary (i.e. bit 0 = 0) in the msb!)
+s2:
+    ds.b 28*230 ; top border area. actually, the first scanline is 160 though...
+    ds.b 200*230 ; main screen
+    ds.b 48*230 ; bottom border, theoretically up to 48 lines, 28 are quite safe to use
+
 ; screen address
 screen:
     ds.l 1
+screen1:
+    ds.l 1
+screen2:
+    ds.l 1
+hw_screen1: ; screen 1 address in format to slap into hw register with movep
+    ds.w 1
+hw_screen2:
+    ds.w 1
 spr_position_addr:
     ds.l 1
 scrollscraddr:
+    ds.l 1
+scrollscraddr1:
+    ds.l 1
+scrollscraddr2:
     ds.l 1
