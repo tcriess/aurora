@@ -17,10 +17,12 @@ a_data  equ     $fffffa1f
 b_data  equ     $fffffa21
 vector  equ     $fffffa17
 
+debug equ 1
+
 ; count lines with timer b
 b_lines equ 228
 
-bot_lines       equ     28
+bot_lines       equ     32
 
 ; into supervisor
     clr.l -(sp)
@@ -60,31 +62,51 @@ bot_lines       equ     28
     move.l #scrn2,d0
     add.l #255,d0
     clr.b d0
+    move.l d0,d1
+    lsr.l #8,d1
+    move.w d1,hw_screen2
+    move.w d1,hw_screen
+    add.l #160,d0 ; skip 1. line
     move.l d0,screen2
     move.l d0,d1
     move.l d0,a5
-    lsr.l #8,d0
-    move.w d0,hw_screen2
-    add.l #160+230*(27+200+bot_lines-64),d1
+    add.l #230*(28+200+bot_lines-64),d1
     addq.l #4,d1 ; planes 3+4 instead of 1+2
     move.l d1,scrollscraddr2 ; we start drawing in scrollscraddr2
     move.l d1,scrollscraddr
+    lea screentable2,a3
+    lea screenoffsettable,a6
+    move.w #28+200+bot_lines,d7
+.mkscreentable2:
+    move.w d0,(a6)+
+    move.l d0,(a3)+
+    add.l #230,d0
+    dbra d7,.mkscreentable2
 
 ; get the (new) screen address (make sure it has the lower byte = 0)
     move.l #scrn,d0
     add.l #255,d0
     clr.b d0 ; clear the lower byte
+    move.l d0,d1
+    lsr.l #8,d1
+    move.w d1,hw_screen1
+    add.l #160,d0
     move.l d0,screen1 ; and store the result as the new screen address (this is actually "somewhere" beween "scrn" and "s")
     move.l d0,screen
     move.l d0,a6 ; also, store it in a6 to put some data in
-    move.l d0,d2
-    lsr.l #8,d2
-    move.w d2,hw_screen1
 
 ; set the new (larger) screen address
     move.l d0,d1
 
-    add.l #160+230*(27+200+bot_lines-64),d0 ; scroller is at address screenstart + 160 (first line) + 230 * 27 (upper border) + 230 * 228 (at the very end) - 230 * 64
+    lea screentable1,a3
+    move.w #28+200+bot_lines,d7
+.mkscreentable1:
+    move.l d0,(a3)+
+    add.l #230,d0
+    dbra d7,.mkscreentable1
+
+    move.l d1,d0
+    add.l #230*(28+200+bot_lines-64),d0 ; scroller is at address screenstart + 160 (first line) + 230 * 28 (upper border) + 230 * 228 (at the very end) - 230 * 64
     addq.l #4,d0 ; planes 3+4 instead of 1+2
     move.l d0,scrollscraddr1
 
@@ -93,16 +115,15 @@ bot_lines       equ     28
     jsr set_scrn
 
 ; set the new palette
-    movem.l my_pal,d0-d7
+    ; movem.l my_pal,d0-d7
+    movem.l pal_start,d0-d7
     movem.l d0-d7,$ffff8240.w
 
     ; sooo, mal etwas grafik auf den screen
-    lea 160(a6),a6 ; first line, 160 bytes, skip it, it is somehow shifted anyway
-    lea 160(a5),a5
     
     ; now, there are 27 lines of the lower border
     ; we fill 19 lines now, then 8 lines with bricks
-    rept 19
+    rept 20
     ; the leftmost pixel (in hatari at least) is here 
     ; move.l #$04000400,(a6)+
     ; move.l #$04000400,(a6)+
@@ -506,13 +527,13 @@ bot_lines       equ     28
 
     ; copy the contents of screen1 to screen2
     ; 160 + 230*27 + 230 * 200 + 230*bot_lines bytes
-    move.w #(160+230*27+230*200+230*bot_lines)/4-1,d7
+    move.w #(230*28+230*200+230*bot_lines)/4-1,d7
 .cpyscr:
     move.l (a6)+,(a5)+
     dbra d7,.cpyscr
 
     ; initially save the sprite background
-    lea spr_bg,a0
+    lea spr_bg1,a0
     rept 16
     movem.l (a1),d0-d3
     movem.l d0-d3,(a0)
@@ -523,6 +544,16 @@ bot_lines       equ     28
     lea raw_spr_cursor,a0
     lea spr_cursor,a1
     jsr prepare_sprite
+    lea raw_spr_empty,a0
+    lea spr_empty,a1
+    jsr prepare_sprite
+    lea raw_spr_cursor_legs1,a0
+    lea spr_cursor_legs1,a1
+    jsr prepare_sprite
+    lea raw_spr_cursor_legs2,a0
+    lea spr_cursor_legs2,a1
+    jsr prepare_sprite
+    jsr init_sprite
     ; jsr prepare_font
 
 ; fill the screen
@@ -549,7 +580,7 @@ do_init_mus:
 	move.w	(a2)+,d0
 	bmi.s	end_init_mus
 
-	movep.w	d0,(a0)
+	movep.w	d0,0(a0)
 	bra.s	do_init_mus
 
 init_mus:
@@ -768,39 +799,277 @@ my_70:
 ;    endr ; total of 4263 nops
 
 ; optional code in the spare cycles start
-; sprite code
-    lea spr_cursor,a3 ; 2 mask + 4 planes, 16 lines, 16 shifts
-    ; todo: pick the correct shift
-    lea spr_bg,a5 ; background buffer 16*16 bytes
-    movea.l spr_position_addr,a6 ; screen address
 
+; first, toggle the screen addresses
+    ; A - toggle the screen bit
+    bchg.b #2,screen_toggle+1
+    ; A: 24c (6 nops)
+    ; B - set the current (draw, not shown) address to a0
+    move.w screen_toggle,d0 ; d0.w is an indicator, in which screen we are (screen 1 or screen 2), it contains 0 or 4
+    lea screens,a0
+    movea.l 0(a0,d0.w),a0 ; 20 c? - screen address to use in a0
+    ; B: 48c (12 nops)
+    ; C - prepare the new hw screen address to set at the end of the interrupt routine
+    lea hw_screens,a1
+    move.w 2(a1,d0.w),d1
+    move.w d1,hw_screen ; hw screen address to set at the end of the vbi routine, see below
+    ; C: 44c (11 nops)
+    ; D - set the screen table for line addresses on the current screen to a1
+    lea screentables,a1
+    movea.l 0(a0,d0.w),a1
+    ; D: 32c (8 nops) - screen table in a1, screen address in a0
+
+    ; E - sprite sequence
+    lea current_sprite_sequence_struct,a3 ; currently executed sprite sequence position
+    ; - 0w: counter
+    ; - 2l: address of animated sprite definition
+    ; - 6l: address of next entry in sequence
+    lea current_ani_sprite_struct,a2 ; see below
+    move.w (a3),d2 ; counter
+    subq #1,d2
+    bge.s .current_sprite_seq_cnt_ok
+    ; things to do when the current sprite sequence counter is <0 (i.e. jump to the next entry in the sequence)
+    ;INNER CODE 1
+    move.l 6(a3),a4 ; a4: point to the next position in the sprite sequence
+    move.w 10(a4),d3 ; 10(a4).w: offset to the next entry to avoid branching (can be negative or 0)
+    move.w (a4),d2 ; new counter
+    move.l 2(a4),a5 ; new animated sprite definition (delay, sprite address, next entry offset)
+    move.l a5,d4
+    tst.l d4
+    ; check if it is != 0. if it is zero, keep the current animation and only update the position (screen + sprite offsets)
+    beq.s .nonewani
+    move.l a5,2(a3) ; update current_sprite_sequence_struct - address of animated sprite definition
+    ; now we update the current_ani_sprite_stuct in a2
+    move.w (a5),(a2) ; counter
+    move.l 2(a5),2(a2) ; sprite data address
+    add.w 6(a5),a5 ; next entry in ani
+    move.l a5,10(a2)
+    bra.s .newanicont
+.nonewani:
+    dcb.w 22,$4e71 ; 88c
+    nop
+    nop
+.newanicont:
+    move.w 6(a4),8(a2) ; screen offset
+    move.w 8(a4),6(a2) ; sprite offset
+
+    add.w d3,a4 ; next entry in the sprite sequence
+    move.l a4,6(a3)
+    ;/INNER CODE 1
+    bra.s .current_sprite_seq_cont
+.current_sprite_seq_cnt_ok:
+    ; nops for INNER CODE 1
+    dcb.w 58,$4e71 ; 232c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+.current_sprite_seq_cont:
+    move.w d2,(a3) ; write back the counter to current_sprite_sequence_struct
+    ; E: 296c (74 nops)
+
+    ; F - sprite handling part 1 - animated sprites (no sequence etc, just the animation)
+    ; animated sprites are defined in a simple sequence which consists of
+    ; - 0w: delay (or -1 for end-of-sequence)
+    ; - 2l: pointer to the sprite data (base, will have to add the shift to that address)
+    lea current_ani_sprite_struct,a2 ; currently displayed sprite
+    ; this struct needs to contain:
+    ; - 0w: counter which counts to (including) 0 (delay value)
+    ; - 2l: pointer to the sprite data (base address)
+    ; - 6w: offset to the correct shift (sprite_size_per_shift(384) bytes * shift (x % 16))
+    ; - 8w: offset to the screen address (230 * y coordinate + x offset (x // 16 * 8))
+    ; - 10l: pointer to the *next* position in the animated sprite definition (f.e. ani_spr_cursor)
+    ; the struct is updated:
+    ; - here, the counter is updated (-1) and
+    ;   - if required, the animation data (+counter) is updated if the counter has run out
+    ; - in the playbook code (below? above? we'll see)
+
+    move.w (a2),d2 ; counter
+    subq #1,d2
+    bge.s .current_ani_spr_cnt_ok
+    ; things to do when the current sprite counter is <0 (i.e. jump to the next sprite content in the animated sprite)
+    ;INNER CODE 1
+    move.l 10(a2),a3 ; point to the next position in the animated sprite definition
+    move.w 6(a3),d3 ; to avoid branching, this is the offset to the next entry (can be negative)
+    move.w (a3),d2 ; counter
+    move.l 2(a3),2(a2) ; sprite data address
+    add.w d3,a3
+    move.l a3,10(a2) ; point to the next position
+    ;/INNER CODE 1
+    bra.s .current_spr_cont
+.current_ani_spr_cnt_ok: ; counter is still >= 0, do nothing
+   ; nops for INNER CODE 1
+    dcb.w 22,$4e71 ; 132c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+    ; 28c placeholder for now
+.current_spr_cont:
+    move.w d2,(a2) ; write back the counter to current_ani_sprite_struct
+    ; F: 140c (35 nops)
+
+    ; G - draw sprite
+    ; a0 - screen address, a1 - screen table, a2 is still pointing to current_ani_sprite_struct
+    move.l d0,-(sp) ; save d0 as it is destroyed
+    lea spr_bgs,a5 ; the sprite backgrounds (1 or 2)
+    move.l (a5,d0.w),a5 ; sprite background - address of correct sprite background struct in a5
+    move.l (a5),a6 ; address on screen to put the old background back on in a6
+    move.l a0,a4 ; screen address
+    add.w 8(a2),a4 ; correct address to put the sprite
+    move.l a4,(a5)+ ; save for later in the bg struct
+    move.l 2(a2),a3 ; sprite data
+    add.w 6(a2),a3 ; add offset to the correct shift -> address of final sprite data in a3
+    
     rept 16
-; restore bg
-    movem.l (a5),d0-d3
-    movem.l d0-d3,(a6)
-; todo: adjust screen addr to new position
-    movem.l (a6),d0-d3
-    move.l d0,(a5)+
-    move.l d1,(a5)+
-    move.l d2,(a5)+
-    move.l d3,(a5)+ ; this seems faster than the "movem + add" version
-    ;movem.l d0-d3,(a5)
-    ;add.l #16,a5 ; next line
-    movem.l (a3)+,d0-d3/a0-a1 ; 2 mask + 4 planes
-    movem.l (a6),d4-d7 ; 4 planes
-    and.l d0,d4 ; plane 1+2 left
-    and.l d0,d5 ; plane 3+4 left
-    and.l d1,d6 ; plane 1+2 right
-    and.l d1,d7 ; plane 3+4 right
-    or.l d2,d4
-    or.l d3,d5
-    move.l a0,d0
-    or.l d0,d6
-    move.l a1,d0
-    or.l d0,d7
-    movem.l d4-d7,(a6)
-    lea.l 230(a6),a6
-    endr ; 6208 cycles
+    ; restore old bg
+    movem.l (a5),d0-d3 ; 44c
+    movem.l d0-d3,(a6) ; 40c
+    ; save bg
+    movem.l (a4),d0-d3 ; 44c store the new background
+    move.l d0,(a5)+ ; 12c
+    move.l d1,(a5)+ ; 12c
+    move.l d2,(a5)+ ; 12c
+    move.l d3,(a5)+ ; 12c this seems faster than the "movem + add" version
+
+    move.l (a3)+,d4 ; 12c mask left
+    ;nop
+    ;nop
+    ;nop
+    move.l (a3)+,d5 ; 12c mask right
+    ;nop
+    ;nop
+    ;nop
+
+    and.l d4,d0 ; 8c
+    and.l d4,d1 ; 8c
+    and.l d5,d2 ; 8c
+    and.l d5,d3 ; 8c
+
+    movem.l (a3)+,d4-d7 ; 44c
+    ; dcb.w 11,$4e71
+    or.l d4,d0 ; 8c
+    or.l d5,d1 ; 8c
+    or.l d6,d2 ; 8c
+    or.l d7,d3 ; 8c
+    movem.l d0-d3,(a4) ; 40c
+    lea 230(a4),a4 ; 8c
+    lea 230(a6),a6 ; 8c
+    endr
+
+    move.l (sp)+,d0 ; restore d0
+    ; G: 5956c (1489 nops)
+
+    ; H - palette sequence
+    lea current_pal_sequence_struct,a3 ; currently executed palette sequence position
+    ; - 0w: counter
+    ; - 2l: address of palette
+    ; - 6l: address of next entry in sequence
+    ; sequence entry:
+    ; - 0w: delay
+    ; - 2l: address of palette
+    ; - 6w: offset to next entry
+    
+    move.w (a3),d2 ; counter
+    move.l 2(a3),a5 ; current palette
+    subq #1,d2
+    bge.s .current_pal_seq_cnt_ok
+    ; things to do when the current pal sequence counter is <0 (i.e. jump to the next entry in the sequence)
+    ;INNER CODE 1
+    move.l 6(a3),a4 ; a4: point to the next position in the palette sequence
+    move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
+    move.w (a4),d2 ; new counter
+    ;movem.l (a5),d4-d7/a0-a2/a6
+    ;movem.l d4-d7/a0-a2/a6,$ffff8240.w
+    move.l 2(a4),2(a3) ; next current palette
+    add.w d3,a4 ; next entry in the sequence
+    move.l a4,6(a3)
+    ;/INNER CODE 1
+    bra.s .current_pal_seq_cont
+.current_pal_seq_cnt_ok:
+    ; nops for INNER CODE 1
+    ; dcb.w 64,$4e71 ; 256c-76-76-16
+    dcb.w 22,$4e71 ; 88c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+.current_pal_seq_cont:
+    move.w d2,(a3) ; write back the counter to current_sprite_sequence_struct
+    movem.l (a5),d4-d7/a0-a2/a6
+    movem.l d4-d7/a0-a2/a6,$ffff8240.w
+    ; H: 308c (77 nops)
+
+    ; I - sound sequence
+    lea current_snd_sequence_struct,a3 ; currently executed palette sequence position
+    ; - 0w: counter
+    ; - 2l: address of palette
+    ; - 6l: address of next entry in sequence
+    ; sequence entry:
+    ; - 0w: delay
+    ; - 2l: address of palette
+    ; - 6w: offset to next entry
+    
+    move.w (a3),d2 ; counter
+    move.l 2(a3),a5 ; current palette
+    subq #1,d2
+    bge.s .current_snd_seq_cnt_ok
+    ; things to do when the current snd sequence counter is <0 (i.e. jump to the next entry in the sequence)
+    ;INNER CODE 1
+    move.l 6(a3),a4 ; a4: point to the next position in the palette sequence
+    move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
+    move.w (a4),d2 ; new counter
+    move.l (a5),play_sound
+    move.l 2(a4),2(a3) ; next current snd
+    add.w d3,a4 ; next entry in the sequence
+    move.l a4,6(a3)
+    ;/INNER CODE 1
+    bra.s .current_snd_seq_cont
+.current_snd_seq_cnt_ok:
+    ; nops for INNER CODE 1
+    dcb.w 29,$4e71 ; 116c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+.current_snd_seq_cont:
+    move.w d2,(a3) ; write back the counter to current_sprite_sequence_struct
+    ; I: 184c (46 nops)
+    
+
+;; sprite code
+;    lea spr_cursor,a3 ; 2 mask + 4 planes, 16 lines, 16 shifts
+;    ; todo: pick the correct shift
+;    lea spr_bg,a5 ; background buffer 16*16 bytes
+;    movea.l spr_position_addr,a6 ; screen address
+
+;    rept 16
+;; restore bg
+;    movem.l (a5),d0-d3
+;    movem.l d0-d3,(a6)
+;; todo: adjust screen addr to new position
+;    movem.l (a6),d0-d3
+;    move.l d0,(a5)+
+;    move.l d1,(a5)+
+;    move.l d2,(a5)+
+;    move.l d3,(a5)+ ; this seems faster than the "movem + add" version
+;    ;movem.l d0-d3,(a5)
+;    ;add.l #16,a5 ; next line
+;    movem.l (a3)+,d0-d3/a0-a1 ; 2 mask + 4 planes
+;    movem.l (a6),d4-d7 ; 4 planes
+;    and.l d0,d4 ; plane 1+2 left
+;    and.l d0,d5 ; plane 3+4 left
+;    and.l d1,d6 ; plane 1+2 right
+;    and.l d1,d7 ; plane 3+4 right
+;    or.l d2,d4
+;    or.l d3,d5
+;    move.l a0,d0
+;    or.l d0,d6
+;    move.l a1,d0
+;    or.l d0,d7
+;    movem.l d4-d7,(a6)
+;    lea.l 230(a6),a6
+;    endr ; 6208 cycles
 
 ;    lea spr_cursor_mask,a4
 ;    lea spr_cursor_data,a3
@@ -834,7 +1103,16 @@ my_70:
 ; optional code end - 6400+12+12+20 cycles = 6444 cycles = 1611 nops
     ; add the remaining cycles to a total of 4263 nops
     ;dcb.w 4263,$4e71
-    dcb.w 2652,$4e71
+    ;dcb.w 2652,$4e71
+    ;dcb.w 2594,$4e71
+    ;dcb.w 4226,$4e71
+
+    ; actually, it seems more stable with a total of 4267 nops
+    ; dcb.w 4192,$4e71 ; A-E
+    ;dcb.w 2704,$4e71 ; A-G ohne E
+    ;dcb.w 2630,$4e71 ; A-G
+    ;dcb.w 2553,$4e71 ; A-H
+    dcb.w 2507,$4e71 ; A-I
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -916,11 +1194,12 @@ my_70:
     dcb.w   50,$4e71 ; total 368 cycles in the first line after sync
     ;dcb.w   85,$4e71 ; 340 cycles = total 368 cycles in the first line after sync
 
+    nop
 ; every line of the scroller needs *2* lines of byte shifting, unfortunately
 ; so we start the shifting here and go on for the next 128 lines to have a 64 lines-scroller
 ; the following rept contains 2 lines
     rept 64
-    nop ; start of with a 4 cycles nop
+    
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome
     move.b  d4,(a1)         ; to lo-res
@@ -1052,6 +1331,7 @@ my_70:
     nop
     nop
     nop
+    nop
 
     endr
 
@@ -1069,7 +1349,7 @@ my_70:
 
 ; 129.-136. line: feed in 8 lines at a time
     rept 8
-    nop
+    ; nop
 
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
@@ -1129,63 +1409,17 @@ my_70:
     nop ; 4 cycles
     move.b  d4,(a1) ; 8 cycles
 
-    dcb.w   12,$4e71 ; 12*4 = 48 cycles
+    dcb.w   13,$4e71 ; 13*4 = 52 cycles
     endr
-
-
-;; 129.-132. line, feed 16 lines of the scroller per line
-;    rept 4
-;    nop
-;
-;* LEFT HAND BORDER!
-;    move.b  d3,(a1)         ; to monochrome 8 cycles
-;    move.b  d4,(a1)         ; to lo-res     8 cycles    
-;
-;    move.l (a4)+,(a5) ; 1. line
-;    move.l (a4)+,230(a5) ; 2. line
-;    move.l (a4)+,2*230(a5) ; 3. line
-;    move.l (a4)+,3*230(a5) ; 4. line
-;    move.l (a4)+,4*230(a5) ; 5. line
-;    move.l (a4)+,5*230(a5) ; 6. line
-;    move.l (a4)+,6*230(a5) ; 7. line
-;    move.l (a4)+,7*230(a5) ; 8. line
-;    move.l (a4)+,8*230(a5) ; 9. line
-;    move.l (a4)+,9*230(a5) ; 10. line
-;    move.l (a4)+,10*230(a5) ; 11. line
-;    move.l (a4)+,11*230(a5) ; 12. line
-;    move.l (a4)+,12*230(a5) ; 13. line
-;    move.l (a4)+,13*230(a5) ; 14. line
-;    move.l (a4)+,14*230(a5) ; 15. line
-
-;    ; dcb.w   89,$4e71 ; 89*4 = 356 cycles (either 90 here, or 89 here and one single nop before the monochrome/color switch, this seems to make it work on all wakestates!)
-
-;* RIGHT AGAIN...
-;    move.b  d4,(a0) ; 8 cycles
-;    move.b  d3,(a0) ; 8 cycles
-
-;    move.l (a4)+,15*230(a5) ; 16. line
-;    lea 16*230(a5),a5
-;    dcb.w   5,$4e71 ; 20 cycles
-
-;    ; dcb.w   13,$4e71 ; 13*4 = 52 cycles
-
-;* EXTRA!
-;    move.b  d3,(a1) ; 8 cycles
-;    nop ; 4 cycles
-;    move.b  d4,(a1) ; 8 cycles
-
-;    dcb.w   12,$4e71 ; 12*4 = 48 cycles
-;    endr
 
 ; 91 lines until the bottom border!
     rept    91
-    nop
 
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
     move.b  d4,(a1)         ; to lo-res     8 cycles    
 
-    dcb.w   89,$4e71 ; 90*4 = 360 cycles (either 90 here, or 89 here and one single nop before the monochrome/color switch, this seems to make it work on all wakestates!)
+    dcb.w   89,$4e71 ; 89*4 = 356 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1198,29 +1432,27 @@ my_70:
     nop ; 4 cycles
     move.b  d4,(a1) ; 8 cycles
 
-    dcb.w   12,$4e71 ; 12*4 = 48 cycles
+    dcb.w   13,$4e71 ; 13*4 = 52 cycles
     endr ; 512 cycles per line
 
 * FINAL LINE...
-    nop
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
     move.b  d4,(a1)         ; to lo-res 8 cycles
 
-    dcb.w   43,$4e71
+    ;dcb.w   43,$4e71
+    ;move.l  #$ffff8240,a3
+    ;lea     scrollerpalred1,a4
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
 
-    move.l  #$ffff8240,a3
-    lea     scrollerpalred1,a4
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-
-    ; dcb.w   89,$4e71 ; 89*4 = 356 cycles
+    dcb.w   89,$4e71 ; 89*4 = 356 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1251,19 +1483,19 @@ my_70:
     move.b  d3,(a1)         ; to monochrome
     move.b  d4,(a1)         ; to lo-res
 
-    dcb.w   43,$4e71
-    move.l  #$ffff8240,a3
-    lea     my_pal,a4
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
-    move.l (a4)+,(a3)+
+    ;dcb.w   43,$4e71
+    ;move.l  #$ffff8240,a3
+    ;lea     my_pal,a4
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
+    ;move.l (a4)+,(a3)+
 
-    ; dcb.w   89,$4e71 ; 356 cycles
+    dcb.w   89,$4e71 ; 356 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
@@ -1282,6 +1514,13 @@ my_70:
     ; now, the time critical stuff is done, and we still have a few cycles for sound...
 
 ; start counter handling
+    tst.l play_sound
+    beq .nosound
+    snd_keyclick2
+    move.l #0,play_sound
+.nosound:
+
+    ; todo: get rid of most of the following code, it is not required any more
     move.w curr_blink,d0
     subq #1,d0
     tst.b d0
@@ -1289,8 +1528,7 @@ my_70:
 
 do_blink2:
     ; eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
-
-    snd_keyclick2
+ 
     move.w blink_rate,d0
     ;lsl.w #1,d0
 
@@ -1313,6 +1551,10 @@ cont_blink3:
     ;move.l a2,scrollpos ; 20 c / 5 nops
 
 ; last thing before exiting: set new screen address in hw regs
+    move.w hw_screen,d7
+    move.w #$8201,a0
+    movep.w d7,0(a0)
+
     and.b #1,d0
     beq.s switch_scr1
 
@@ -1336,8 +1578,8 @@ switch_scr:
     move.w d4,fontoffset1
     move.w d5,fontoffset2
 
-    move.l #$ff8201,a0
-    movep.w d0,0(a0)
+    ;move.l #$ff8201,a0
+    ;movep.w d0,0(a0)
 
 exit_vbi:
 ; restore registers
@@ -1524,11 +1766,85 @@ shift_one:
     ror.l #1,d3
     ror.l #1,d4
 
-    add.w #384,d5 ; 1 sprite shift uses 16 lines * (8 bytes + 16 bytes) 
+sprite_size_per_shift equ 384 ; size in bytes, (8 mask+16 data)*16 lines
+
+    add.w #sprite_size_per_shift,d5 ; 1 sprite shift uses 16 lines * (8 bytes + 16 bytes) 
     dbra d6,shift_one
 
     lea 24(a1),a1 ; next line, 24 bytes per line
     dbra d7,shift_line
+
+    rts
+
+init_sprite:
+    ; fill the current_sprite_sequence_struct
+    ; - 0w: counter
+    ; - 2l: address of animated sprite definition
+    ; - 6l: address of next entry in sequence
+    lea current_sprite_sequence_struct,a0
+    ; sprite sequence
+
+    lea spr_sequence,a1
+    ; - 0w: delay
+    ; - 2l: address of animated sprite definition
+    ; - 6w: screen address offset
+    ; - 8w: sprite shift address offset
+    ; - 10w: offset to next entry in sequence (0 = repeat forever)
+    move.w 0(a1),0(a0)
+    move.l 2(a1),2(a0)
+    move.w 6(a1),d0 ; screen offset
+    move.w 8(a1),d1 ; sprite shift offset
+    add.w 10(a1),a1 ; offset to next entry
+    move.l a1,6(a0) ; set address of next entry in current struct
+
+    ; fill current_ani_sprite_struct
+    ; this struct needs to contain:
+    ; - 0w: counter which counts to (including) 0 (delay value)
+    ; - 2l: pointer to the sprite data (base address)
+    ; - 6w: offset to the correct shift (sprite_size_per_shift(384) bytes * shift (x % 16))
+    ; - 8w: offset to the screen address (230 * y coordinate + x offset (x // 16 * 8))
+    ; - 10l: pointer to the *next* position in the animated sprite definition (f.e. ani_spr_cursor)
+    lea ani_spr_cursor,a2 ; for now, we start with the cursor, later this will be taken from the playbook
+    lea current_ani_sprite_struct,a1
+    move.w 0(a2),0(a1) ; delay
+    move.l 2(a2),2(a1) ; sprite data address
+    ;move.w #sprite_size_per_shift*0,6(a1) ; shift 0
+    ;move.w #230*(28-4)+24,8(a1) ; offset to screen
+    move.w d0,8(a1) ; screen offset
+    move.w d1,6(a1) ; sprite shift offset
+    add.w 6(a2),a2 ; 6(a2) is the offset in the animated sprite definition to the next sprite (can be negative to point to the beginning or so)
+    move.l a2,10(a1)
+
+    ; initially save the sprite background
+    move.l screen,a0
+    lea spr_bg1,a1
+    lea spr_bg2,a2
+    move.l screen1,(a1)+
+    move.l screen2,(a2)+
+    rept 16
+    movem.l (a0),d0-d3
+    movem.l d0-d3,(a1)
+    movem.l d0-d3,(a2)
+    lea 16(a1),a1
+    lea 16(a2),a2
+    lea 230(a0),a0
+    endr
+
+    ; init also the current pal and the current snd
+    lea current_pal_sequence_struct,a0
+    lea pal_sequence,a1
+    move.w (a1),(a0) ; delay
+    move.l 2(a1),2(a0) ; palette address
+    add.w 6(a1),a1
+    move.l a1,6(a0)
+
+    lea current_snd_sequence_struct,a0
+    lea snd_sequence,a1
+    move.w (a1),(a0) ; delay
+    move.l 2(a1),2(a0)
+    add.w 6(a1),a1
+    move.l a1,6(a0)
+
     rts
 
 ; bit zip algorithm from fxtbook for 2 16 bit values
@@ -1757,12 +2073,212 @@ pick_sysfont_chars:
     dc.b $20,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4a,$4b,$4c,$4d,$4e,$4f ; [ ],A,B,C,D,E,...,O
     dc.b $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$2e,$2d,$21,$0e,$0f ; P,Q,...,Z,.,-,!,[atarileft],[atariright]
 
+pal_sequence:
+    dc.w 750 ; delay
+    dc.l pal_start ; address of the new palette
+    dc.w 8 ; offset to the next entry
+    dc.w 25
+    dc.l pal_border1 ; address of the new palette
+    dc.w 8 ; offset to the next entry
+    dc.w 5
+    dc.l pal_border2 ; address of the new palette
+    dc.w 8 ; offset to the next entry
+    dc.w 5
+    dc.l pal_border3 ; address of the new palette
+    dc.w 8 ; offset to the next entry
+    dc.w 5
+    dc.l pal_border4 ; address of the new palette
+    dc.w -32 ; offset to the next entry
 
-spr_playbook:
-    dc.w 52,
+snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
+    dc.w 50
+    dc.l keyclick
+    dc.w 8
+    dc.w 25
+    dc.l keyclick
+    dc.w 8
+    dc.w 10
+    dc.l keyclick
+    dc.w -16
+
+spr_sequence:
+    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor ; 2l: animated sprite definition
+    dc.w 230*(28-4)+24 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor ; 2l: animated sprite definition
+    dc.w 230*(28-4)+24 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor_legs ; 2l: animated sprite definition
+    dc.w 230*(28-4)+24 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor_legs ; 2l: animated sprite definition
+    dc.w 230*(28-4)+24 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*12 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+32 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor_legs ; 2l: animated sprite definition
+    dc.w 230*(28-4)+32 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*4 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+32 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+32 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*12 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+40 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+40 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+48 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+48 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+56 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+56 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+64 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+64 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+72 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+72 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+80 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+88 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+96 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+104 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+112 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+120 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+128 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+136 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+144 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+152 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+160 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+168 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+176 ; 6w: screen address offset
+    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
 
 ani_spr_cursor:
-    dc.w 0,25,1,25,-1 ; sprite_no, delay (1/50s), ..., -1
+    dc.w 25 ; delay
+    dc.l spr_cursor ; sprite data
+    dc.w 8 ; offset to the next entry
+    dc.w 25
+    dc.l spr_empty ; sprite data
+    dc.w -8 ; affset to the next entry (go backwards)
+
+ani_spr_cursor_legs:
+    dc.w 25 ; delay
+    dc.l spr_cursor_legs1 ; sprite data
+    dc.w 8 ; offset to the next entry
+    dc.w 25
+    dc.l spr_empty ; sprite data
+    dc.w 8 ; affset to the next entry (go backwards)
+    dc.w 25 ; delay
+    dc.l spr_cursor_legs2 ; sprite data
+    dc.w 8 ; offset to the next entry
+    dc.w 25
+    dc.l spr_empty ; sprite data
+    dc.w -24 ; affset to the next entry (go backwards)
 
 raw_sprites:
 ; 0
@@ -1786,22 +2302,58 @@ raw_spr_empty:
 
 ; 1
 raw_spr_cursor:
-    dc.w $0FFF,$0000,$f000,$0000,$0000
+    dc.w $0FFF,$f000,$f000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0000,$0F00,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $0FFF,$f000,$0000,$f000,$0000
+
+raw_spr_cursor_legs1:
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $FEFF,$0100,$0100,$0000,$0000
+    dc.w $FEFF,$0100,$0100,$0000,$0000
+    dc.w $FE7F,$0180,$0180,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+
+raw_spr_cursor_legs2:
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+    dc.w $FEBF,$0140,$0140,$0000,$0000
+    dc.w $FEBF,$0140,$0140,$0000,$0000
+    dc.w $FE1F,$01E0,$01E0,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
 
 mouse_params:
     dc.b    0,1,1,1
@@ -1811,7 +2363,107 @@ my_pal: ; default palette. we start with a white bg, plane 1+2 are for the backg
     dc.w $0777 ; 0 %0000 bg
     dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-    dc.w $0000 ; 3 inital cursor color (black)
+    dc.w $0700 ; 3 inital cursor color (black)
+    dc.w $0333 ; 4 scroller border left
+    dc.w $0333 ; 5 scroller border left
+    dc.w $0333 ; 6 scroller border left
+    dc.w $0333 ; 7 scroller border left
+    dc.w $0222 ; 8 scroller border right
+    dc.w $0222 ; 9 scroller border right
+    dc.w $0222 ; 10 scroller border right
+    dc.w $0222 ; 11 scroller border right
+    dc.w $0000 ; 12 scroller main color
+    dc.w $0000 ; 13 scroller main color
+    dc.w $0000 ; 14 scroller main color
+    dc.w $0000 ; 15 scroller main color
+
+pal_start: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0777 ; 0 %0000 bg
+    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0700 ; 3 inital cursor color (black)
+    dc.w $0333 ; 4 scroller border left
+    dc.w $0333 ; 5 scroller border left
+    dc.w $0333 ; 6 scroller border left
+    dc.w $0333 ; 7 scroller border left
+    dc.w $0222 ; 8 scroller border right
+    dc.w $0222 ; 9 scroller border right
+    dc.w $0222 ; 10 scroller border right
+    dc.w $0222 ; 11 scroller border right
+    dc.w $0000 ; 12 scroller main color
+    dc.w $0000 ; 13 scroller main color
+    dc.w $0000 ; 14 scroller main color
+    dc.w $0000 ; 15 scroller main color
+
+pal_border1: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0777 ; 0 %0000 bg
+    dc.w $0501 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0301 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0700 ; 3 inital cursor color (black)
+    dc.w $0333 ; 4 scroller border left
+    dc.w $0333 ; 5 scroller border left
+    dc.w $0333 ; 6 scroller border left
+    dc.w $0333 ; 7 scroller border left
+    dc.w $0222 ; 8 scroller border right
+    dc.w $0222 ; 9 scroller border right
+    dc.w $0222 ; 10 scroller border right
+    dc.w $0222 ; 11 scroller border right
+    dc.w $0000 ; 12 scroller main color
+    dc.w $0000 ; 13 scroller main color
+    dc.w $0000 ; 14 scroller main color
+    dc.w $0000 ; 15 scroller main color
+
+pal_border2: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0777 ; 0 %0000 bg
+    dc.w $0601 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0401 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0700 ; 3 inital cursor color (black)
+    dc.w $0333 ; 4 scroller border left
+    dc.w $0333 ; 5 scroller border left
+    dc.w $0333 ; 6 scroller border left
+    dc.w $0333 ; 7 scroller border left
+    dc.w $0222 ; 8 scroller border right
+    dc.w $0222 ; 9 scroller border right
+    dc.w $0222 ; 10 scroller border right
+    dc.w $0222 ; 11 scroller border right
+    dc.w $0000 ; 12 scroller main color
+    dc.w $0000 ; 13 scroller main color
+    dc.w $0000 ; 14 scroller main color
+    dc.w $0000 ; 15 scroller main color
+
+pal_border3: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0777 ; 0 %0000 bg
+    dc.w $0701 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0601 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0700 ; 3 inital cursor color (black)
+    dc.w $0333 ; 4 scroller border left
+    dc.w $0333 ; 5 scroller border left
+    dc.w $0333 ; 6 scroller border left
+    dc.w $0333 ; 7 scroller border left
+    dc.w $0222 ; 8 scroller border right
+    dc.w $0222 ; 9 scroller border right
+    dc.w $0222 ; 10 scroller border right
+    dc.w $0222 ; 11 scroller border right
+    dc.w $0000 ; 12 scroller main color
+    dc.w $0000 ; 13 scroller main color
+    dc.w $0000 ; 14 scroller main color
+    dc.w $0000 ; 15 scroller main color
+
+pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0777 ; 0 %0000 bg
+    dc.w $0700 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0700 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0700 ; 3 inital cursor color (black)
     dc.w $0333 ; 4 scroller border left
     dc.w $0333 ; 5 scroller border left
     dc.w $0333 ; 6 scroller border left
@@ -1922,6 +2574,11 @@ scrolltext:
     ;dc.b 'LEONARD_FOR_THE_FANTASTIC_STRINKLER____THANKS_TO_GREY_AGAIN___THANKS_TO_ALL_THE_NICE_ATARI_PEOPLE_____________________'
 scrolltextsize equ *-scrolltext
     even
+screen_toggle:
+    dc.b 0
+screen_toggle_b:
+    dc.b 0
+    even
 
 scrollpos: ; pointer to the current position inside scrolltextbuffer
     dc.l scrolltextbuffer
@@ -1931,7 +2588,44 @@ font_addr1:
 font_addr2:
     dc.l font_shift_l
 
+screentables:
+    dc.l screentable1,screentable2
+
+spr_bgs:
+    dc.l spr_bg1,spr_bg2
+
+play_sound:
+    dc.l 0
+
     bss
+current_pal_sequence_struct:
+    ds.w 1 ; counter
+    ds.l 1 ; address of the palette
+    ds.l 1 ; address of the next entry in the sequence
+
+current_snd_sequence_struct:
+    ds.w 1 ; counter
+    ds.l 1 ; address of the sounddata
+    ds.l 1 ; address of the next entry in the sequence
+
+current_sprite_sequence_struct:
+    ds.w 1 ; counter
+    ds.l 1 ; address of animated sprite definition
+    ds.l 1 ; address of next entry in sequence
+
+current_ani_sprite_struct: ; holds data of the currently displayed animated sprite
+    ; this struct needs to contain:
+    ; - 0w: counter which counts to (including) 0 (delay value)
+    ; - 2l: pointer to the sprite data (base address)
+    ; - 6w: offset to the correct shift (sprite_size_per_shift(384) bytes * shift (x % 16))
+    ; - 8w: offset to the screen address (230 * y coordinate + x offset (x // 16 * 8))
+    ; - 10l: pointer to the *next* position in the animated sprite definition (f.e. ani_spr_cursor)
+    ds.w 1 ; counter
+    ds.l 1 ; base sprite data address
+    ds.w 1 ; shift offset
+    ds.w 1 ; screen address offset
+    ds.l 1 ; next position in the definition
+
 fontoffset1:
     ds.w 1
 fontoffset2:
@@ -1957,11 +2651,6 @@ res:
 pal:
     ds.w 16
 
-; old timer registers
-;old:
-;    ds.b 10
-;    ds.l 2
-
 ; cursor blink rate (in vbl-calls, i.e. 1/50 secs)
 blink_rate:
     ds.w 1
@@ -1971,8 +2660,19 @@ curr_blink:
 spr_cursor:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_bg:
-    ds.l 4*16 ; 4 planes * 16 lines
+spr_empty:
+    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+
+spr_cursor_legs1:
+    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+
+spr_cursor_legs2:
+    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+
+spr_bg1:
+    ds.l 1+4*16 ; start address + 4 planes * 16 lines
+spr_bg2:
+    ds.l 1+4*16 ; start address + 4 planes * 16 lines
 
 fontcharactersize equ 256 ; the char in the font (which is only part of the full character...) takes up that many bytes: 2 words(planes) * 64 lines = 128 words = 256 bytes
 font:
@@ -1990,9 +2690,6 @@ font_shift_r:
     ds.l 2*2*64*32
 font_shift_l:
     ds.l 2*2*64*32
-
-lineainp:
-    ds.l 1
 
 ; the new screen address
 scrn:
@@ -2019,21 +2716,38 @@ s2:
     ds.b 200*230 ; main screen
     ds.b 48*230 ; bottom border, theoretically up to 48 lines, 28 are quite safe to use
 
-; screen address
+; screen address (not really, we add 160 bytes for the first line already, because afterwards every line has 230 bytes)
 screen:
     ds.l 1
+screens:
 screen1:
     ds.l 1
 screen2:
     ds.l 1
+
+screenoffsettable:
+    ds.w 28+200+bot_lines
+
+screentable1:
+    ds.l 28+200+bot_lines ; address of every line in the screen, avoids repeated *230
+screentable2:
+    ds.l 28+200+bot_lines
+
+hw_screen: ; screen address in format to slap into hw register with movep on the next sync
+    ds.w 1
+hw_screens:
+    ds.w 1 ; filler
 hw_screen1: ; screen 1 address in format to slap into hw register with movep
     ds.w 1
-hw_screen2:
+    ds.w 1 ; filler
+hw_screen2: ; screen 2 address in format to slap into hw register with movep
     ds.w 1
+
 spr_position_addr:
     ds.l 1
 scrollscraddr:
     ds.l 1
+scrollscraddrs:
 scrollscraddr1:
     ds.l 1
 scrollscraddr2:
