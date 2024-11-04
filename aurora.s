@@ -1003,15 +1003,15 @@ my_70:
     ; I - sound sequence
     lea current_snd_sequence_struct,a3 ; currently executed palette sequence position
     ; - 0w: counter
-    ; - 2l: address of palette
+    ; - 2l: address of snd
     ; - 6l: address of next entry in sequence
     ; sequence entry:
     ; - 0w: delay
-    ; - 2l: address of palette
+    ; - 2l: address of snd
     ; - 6w: offset to next entry
     
     move.w (a3),d2 ; counter
-    move.l 2(a3),a5 ; current palette
+    move.l 2(a3),a5 ; current snd addr
     subq #1,d2
     bge.s .current_snd_seq_cnt_ok
     ; things to do when the current snd sequence counter is <0 (i.e. jump to the next entry in the sequence)
@@ -1019,7 +1019,8 @@ my_70:
     move.l 6(a3),a4 ; a4: point to the next position in the palette sequence
     move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
     move.w (a4),d2 ; new counter
-    move.l (a5),play_sound
+    move.l a5,play_sound
+
     move.l 2(a4),2(a3) ; next current snd
     add.w d3,a4 ; next entry in the sequence
     move.l a4,6(a3)
@@ -1027,14 +1028,14 @@ my_70:
     bra.s .current_snd_seq_cont
 .current_snd_seq_cnt_ok:
     ; nops for INNER CODE 1
-    dcb.w 29,$4e71 ; 116c
+    dcb.w 27,$4e71 ; 108c
 
     ; following two nops to even out the cycles of the bge/bra construct
     nop
     nop
 .current_snd_seq_cont:
     move.w d2,(a3) ; write back the counter to current_sprite_sequence_struct
-    ; I: 184c (46 nops)
+    ; I: 176c (44 nops)
     
 
 ;; sprite code
@@ -1112,7 +1113,7 @@ my_70:
     ;dcb.w 2704,$4e71 ; A-G ohne E
     ;dcb.w 2630,$4e71 ; A-G
     ;dcb.w 2553,$4e71 ; A-H
-    dcb.w 2507,$4e71 ; A-I
+    dcb.w 2509,$4e71 ; A-I
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -1522,9 +1523,70 @@ my_70:
     ; now, the time critical stuff is done, and we still have a few cycles for sound...
 
 ; start counter handling
-    tst.l play_sound
+    move.l play_sound,d5
+    tst.l d5
     beq .nosound
-    snd_keyclick2
+    move.l d5,a5
+    move.w #$8800,a6
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 0
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 1
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 2
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 3
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 4
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 5
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 6
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 7
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 8
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 9
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 10
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 11
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 12
+    ;move.b (a5)+,(a6)
+    ;move.b (a5)+,2(a6) ; reg 13
+
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 0
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 1
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 2
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 3
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 4
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 5
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 6
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 7
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 8
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 9
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 10
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 11
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 12
+    move.w (a5)+,d5
+    movep.w d5,0(a6) ; reg 13
+
+    ; snd_keyclick2
     move.l #0,play_sound
 .nosound:
 
@@ -2100,14 +2162,74 @@ pal_sequence:
 
 snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
     dc.w 50
-    dc.l keyclick
+    dc.l snd_keyclick_data
     dc.w 8
     dc.w 25
-    dc.l keyclick
+    dc.l snd_keyclick_data
     dc.w 8
     dc.w 10
-    dc.l keyclick
-    dc.w -16
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 50
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 50
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 50
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 50
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 50
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_bell_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_data
+    dc.w 8
+    dc.w 25
+    dc.l snd_bell_data
+    dc.w -24
 
 spr_sequence:
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
@@ -2617,6 +2739,38 @@ spr_bgs:
 
 play_sound:
     dc.l 0
+
+snd_keyclick_data:
+    dc.b $00,$3B ; register 0 (chan 1)
+    dc.b $01,$00 ; register 1 (chan 1)
+    dc.b $02,$00 ; register 2 (chan 2)
+    dc.b $03,$00 ; register 3 (chan 2)
+    dc.b $04,$00 ; register 4 (chan 3)
+    dc.b $05,$00 ; register 5 (chan 3)
+    dc.b $06,$00 ; register 6 (noise)
+    dc.b $07,$FE ; register 7 (chan select)
+    dc.b $08,$10 ; register 8 (amplitude chan 1)
+    dc.b $09,$00 ; register 9 (amplitude chan 2)
+    dc.b $0a,$00 ; register 10 (amplitude chan 3)
+    dc.b $0b,$80 ; register 11 (envelope)
+    dc.b $0c,$01 ; register 12
+    dc.b $0d,$03 ; register 13
+
+snd_bell_data:
+    dc.b 0,$34   ; /* channel A pitch */
+    dc.b 1,0
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
 
     bss
 current_pal_sequence_struct:
