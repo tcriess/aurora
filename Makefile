@@ -1,6 +1,6 @@
 VASM := vasmm68k_mot
-VASMFLAGS_DEBUG := -Ftos -nowarn=62 -m68000 -no-fpu -no-opt
-VASMFLAGS := -Ftos -nowarn=62 -m68000 -no-fpu -no-opt -nosym
+VASMFLAGS_DEBUG := -Ftos -nowarn=62 -m68000 -no-fpu -no-opt -DDEBUG=1
+VASMFLAGS := -Ftos -nowarn=62 -m68000 -no-fpu -no-opt -nosym -DDEBUG=0
 MAIN := aurora.s
 TARGET_DEBUG := aurorad.tos
 TARGET := aurora.tos

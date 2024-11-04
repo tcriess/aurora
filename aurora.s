@@ -17,7 +17,7 @@ a_data  equ     $fffffa1f
 b_data  equ     $fffffa21
 vector  equ     $fffffa17
 
-debug equ 1
+; DEBUG equ 1
 
 ; count lines with timer b
 b_lines equ 228
@@ -1136,14 +1136,22 @@ my_70:
     move.b  (a0),d0
     beq.s   .wait ; wait for video address low byte != 0
 
+    if DEBUG
     eor.w   #$f0f,$ffff8240.w ; do sth with palette bg color (remove this in production!)
+    else
+    dcb.w 5,$4e71
+    endif
 
     sub.w   d0,d1 ; d0 <> 0, d1 = 16 => d1 = 16 - d0
     lsl.w   d1,d0 ; probably some trick to sync with the correct number of cycles without hassle (i.e. "synchronize" the cpu)
 
     ; SYNC is done here!
     
+    if DEBUG
     eor.w   #$f0f,$ffff8240.w ; reset palette bg color (remove this in production!)
+    else
+    dcb.w 5,$4e71
+    endif
 
     move.w #$820a,a0
     ; up to this point, after the wait: 58 cycles
@@ -2302,7 +2310,11 @@ raw_spr_empty:
 
 ; 1
 raw_spr_cursor:
+    if DEBUG
     dc.w $0FFF,$f000,$f000,$0000,$0000
+    else
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    endif
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
@@ -2317,7 +2329,11 @@ raw_spr_cursor:
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
+    if DEBUG
     dc.w $0FFF,$f000,$0000,$f000,$0000
+    else
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    endif
 
 raw_spr_cursor_legs1:
     dc.w $FFFF,$0000,$0000,$0000,$0000
@@ -2383,7 +2399,11 @@ pal_start: ; default palette. we start with a white bg, plane 1+2 are for the ba
     dc.w $0777 ; 0 %0000 bg
     dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    if DEBUG
     dc.w $0700 ; 3 inital cursor color (black)
+    else
+    dc.w $0000 ; 3 inital cursor color (black)
+    endif
     dc.w $0333 ; 4 scroller border left
     dc.w $0333 ; 5 scroller border left
     dc.w $0333 ; 6 scroller border left
