@@ -533,13 +533,13 @@ bot_lines       equ     32
     dbra d7,.cpyscr
 
     ; initially save the sprite background
-    lea spr_bg1,a0
-    rept 16
-    movem.l (a1),d0-d3
-    movem.l d0-d3,(a0)
-    lea 16(a0),a0
-    lea 230(a1),a1
-    endr
+    ;lea spr_bg1,a0
+    ;rept 16
+    ;movem.l (a1),d0-d3
+    ;movem.l d0-d3,(a0)
+    ;lea 16(a0),a0
+    ;lea 230(a1),a1
+    ;endr
 
     lea raw_spr_cursor,a0
     lea spr_cursor,a1
@@ -960,6 +960,148 @@ my_70:
     move.l (sp)+,d0 ; restore d0
     ; G: 5956c (1489 nops)
 
+    ; second sprite - E2, F2, G2
+    ; E2 - sprite sequence
+    lea current_sprite_sequence_struct2,a3 ; currently executed sprite sequence position
+    ; - 0w: counter
+    ; - 2l: address of animated sprite definition
+    ; - 6l: address of next entry in sequence
+    lea current_ani_sprite_struct2,a2 ; see below
+    move.w (a3),d2 ; counter
+    subq #1,d2
+    bge.s .current_sprite_seq_cnt_ok2
+    ; things to do when the current sprite sequence counter is <0 (i.e. jump to the next entry in the sequence)
+    ;INNER CODE 1
+    move.l 6(a3),a4 ; a4: point to the next position in the sprite sequence
+    move.w 10(a4),d3 ; 10(a4).w: offset to the next entry to avoid branching (can be negative or 0)
+    move.w (a4),d2 ; new counter
+    move.l 2(a4),a5 ; new animated sprite definition (delay, sprite address, next entry offset)
+    move.l a5,d4
+    tst.l d4
+    ; check if it is != 0. if it is zero, keep the current animation and only update the position (screen + sprite offsets)
+    beq.s .nonewani2
+    move.l a5,2(a3) ; update current_sprite_sequence_struct - address of animated sprite definition
+    ; now we update the current_ani_sprite_stuct in a2
+    move.w (a5),(a2) ; counter
+    move.l 2(a5),2(a2) ; sprite data address
+    add.w 6(a5),a5 ; next entry in ani
+    move.l a5,10(a2)
+    bra.s .newanicont2
+.nonewani2:
+    dcb.w 22,$4e71 ; 88c
+    nop
+    nop
+.newanicont2:
+    move.w 6(a4),8(a2) ; screen offset
+    move.w 8(a4),6(a2) ; sprite offset
+
+    add.w d3,a4 ; next entry in the sprite sequence
+    move.l a4,6(a3)
+    ;/INNER CODE 1
+    bra.s .current_sprite_seq_cont2
+.current_sprite_seq_cnt_ok2:
+    ; nops for INNER CODE 1
+    dcb.w 58,$4e71 ; 232c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+.current_sprite_seq_cont2:
+    move.w d2,(a3) ; write back the counter to current_sprite_sequence_struct
+    ; E2: 296c (74 nops)
+
+    ; F2 - sprite handling part 1 - animated sprites (no sequence etc, just the animation)
+    ; animated sprites are defined in a simple sequence which consists of
+    ; - 0w: delay (or -1 for end-of-sequence)
+    ; - 2l: pointer to the sprite data (base, will have to add the shift to that address)
+    lea current_ani_sprite_struct2,a2 ; currently displayed sprite
+    ; this struct needs to contain:
+    ; - 0w: counter which counts to (including) 0 (delay value)
+    ; - 2l: pointer to the sprite data (base address)
+    ; - 6w: offset to the correct shift (sprite_size_per_shift(384) bytes * shift (x % 16))
+    ; - 8w: offset to the screen address (230 * y coordinate + x offset (x // 16 * 8))
+    ; - 10l: pointer to the *next* position in the animated sprite definition (f.e. ani_spr_cursor)
+    ; the struct is updated:
+    ; - here, the counter is updated (-1) and
+    ;   - if required, the animation data (+counter) is updated if the counter has run out
+    ; - in the playbook code (below? above? we'll see)
+
+    move.w (a2),d2 ; counter
+    subq #1,d2
+    bge.s .current_ani_spr_cnt_ok2
+    ; things to do when the current sprite counter is <0 (i.e. jump to the next sprite content in the animated sprite)
+    ;INNER CODE 1
+    move.l 10(a2),a3 ; point to the next position in the animated sprite definition
+    move.w 6(a3),d3 ; to avoid branching, this is the offset to the next entry (can be negative)
+    move.w (a3),d2 ; counter
+    move.l 2(a3),2(a2) ; sprite data address
+    add.w d3,a3
+    move.l a3,10(a2) ; point to the next position
+    ;/INNER CODE 1
+    bra.s .current_spr_cont2
+.current_ani_spr_cnt_ok2: ; counter is still >= 0, do nothing
+   ; nops for INNER CODE 1
+    dcb.w 22,$4e71 ; 132c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+    ; 28c placeholder for now
+.current_spr_cont2:
+    move.w d2,(a2) ; write back the counter to current_ani_sprite_struct
+    ; F2: 140c (35 nops)
+
+    ; G2 - draw sprite 2
+    ; a0 - screen address, a1 - screen table, a2 is still pointing to current_ani_sprite_struct
+    move.l d0,-(sp) ; save d0 as it is destroyed
+    lea spr_bgs2,a5 ; the sprite backgrounds (1 or 2)
+    move.l (a5,d0.w),a5 ; sprite background - address of correct sprite background struct in a5
+    move.l (a5),a6 ; address on screen to put the old background back on in a6
+    move.l a0,a4 ; screen address
+    add.w 8(a2),a4 ; correct address to put the sprite
+    move.l a4,(a5)+ ; save for later in the bg struct
+    move.l 2(a2),a3 ; sprite data
+    add.w 6(a2),a3 ; add offset to the correct shift -> address of final sprite data in a3
+    
+    rept 16
+    ; restore old bg
+    movem.l (a5),d0-d3 ; 44c
+    movem.l d0-d3,(a6) ; 40c
+    ; save bg
+    movem.l (a4),d0-d3 ; 44c store the new background
+    move.l d0,(a5)+ ; 12c
+    move.l d1,(a5)+ ; 12c
+    move.l d2,(a5)+ ; 12c
+    move.l d3,(a5)+ ; 12c this seems faster than the "movem + add" version
+
+    move.l (a3)+,d4 ; 12c mask left
+    ;nop
+    ;nop
+    ;nop
+    move.l (a3)+,d5 ; 12c mask right
+    ;nop
+    ;nop
+    ;nop
+
+    and.l d4,d0 ; 8c
+    and.l d4,d1 ; 8c
+    and.l d5,d2 ; 8c
+    and.l d5,d3 ; 8c
+
+    movem.l (a3)+,d4-d7 ; 44c
+    ; dcb.w 11,$4e71
+    or.l d4,d0 ; 8c
+    or.l d5,d1 ; 8c
+    or.l d6,d2 ; 8c
+    or.l d7,d3 ; 8c
+    movem.l d0-d3,(a4) ; 40c
+    lea 230(a4),a4 ; 8c
+    lea 230(a6),a6 ; 8c
+    endr
+
+    move.l (sp)+,d0 ; restore d0
+    ; G2: 5956c (1489 nops)
+
     ; H - palette sequence
     lea current_pal_sequence_struct,a3 ; currently executed palette sequence position
     ; - 0w: counter
@@ -1113,7 +1255,8 @@ my_70:
     ;dcb.w 2704,$4e71 ; A-G ohne E
     ;dcb.w 2630,$4e71 ; A-G
     ;dcb.w 2553,$4e71 ; A-H
-    dcb.w 2509,$4e71 ; A-I
+    ;dcb.w 2509,$4e71 ; A-I, without E2-G2
+    dcb.w 911,$4e71 ; A-I, with E2-G2
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -1861,7 +2004,7 @@ init_sprite:
     ; - 8w: sprite shift address offset
     ; - 10w: offset to next entry in sequence (0 = repeat forever)
     move.w 0(a1),0(a0)
-    move.l 2(a1),2(a0)
+    move.l 2(a1),2(a0) ; current ani spr
     move.w 6(a1),d0 ; screen offset
     move.w 8(a1),d1 ; sprite shift offset
     add.w 10(a1),a1 ; offset to next entry
@@ -1874,8 +2017,35 @@ init_sprite:
     ; - 6w: offset to the correct shift (sprite_size_per_shift(384) bytes * shift (x % 16))
     ; - 8w: offset to the screen address (230 * y coordinate + x offset (x // 16 * 8))
     ; - 10l: pointer to the *next* position in the animated sprite definition (f.e. ani_spr_cursor)
-    lea ani_spr_cursor,a2 ; for now, we start with the cursor, later this will be taken from the playbook
+    move.l 2(a0),a2 ;
     lea current_ani_sprite_struct,a1
+    move.w 0(a2),0(a1) ; delay
+    move.l 2(a2),2(a1) ; sprite data address
+    ;move.w #sprite_size_per_shift*0,6(a1) ; shift 0
+    ;move.w #230*(28-4)+24,8(a1) ; offset to screen
+    move.w d0,8(a1) ; screen offset
+    move.w d1,6(a1) ; sprite shift offset
+    add.w 6(a2),a2 ; 6(a2) is the offset in the animated sprite definition to the next sprite (can be negative to point to the beginning or so)
+    move.l a2,10(a1)
+    
+    lea current_sprite_sequence_struct2,a0
+    ; sprite sequence
+
+    lea spr_sequence2,a1
+    ; - 0w: delay
+    ; - 2l: address of animated sprite definition
+    ; - 6w: screen address offset
+    ; - 8w: sprite shift address offset
+    ; - 10w: offset to next entry in sequence (0 = repeat forever)
+    move.w 0(a1),0(a0)
+    move.l 2(a1),2(a0)
+    move.w 6(a1),d0 ; screen offset
+    move.w 8(a1),d1 ; sprite shift offset
+    add.w 10(a1),a1 ; offset to next entry
+    move.l a1,6(a0) ; set address of next entry in current struct
+
+    move.l 2(a0),a2 ;
+    lea current_ani_sprite_struct2,a1
     move.w 0(a2),0(a1) ; delay
     move.l 2(a2),2(a1) ; sprite data address
     ;move.w #sprite_size_per_shift*0,6(a1) ; shift 0
@@ -1889,6 +2059,20 @@ init_sprite:
     move.l screen,a0
     lea spr_bg1,a1
     lea spr_bg2,a2
+    move.l screen1,(a1)+
+    move.l screen2,(a2)+
+    rept 16
+    movem.l (a0),d0-d3
+    movem.l d0-d3,(a1)
+    movem.l d0-d3,(a2)
+    lea 16(a1),a1
+    lea 16(a2),a2
+    lea 230(a0),a0
+    endr
+
+    move.l screen,a0
+    lea spr_bg3,a1
+    lea spr_bg4,a2
     move.l screen1,(a1)+
     move.l screen2,(a2)+
     rept 16
@@ -2388,6 +2572,13 @@ spr_sequence:
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
 
+spr_sequence2:
+    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor ; 2l: animated sprite definition
+    dc.w 230*(28-4+100)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+
 ani_spr_cursor:
     dc.w 25 ; delay
     dc.l spr_cursor ; sprite data
@@ -2737,6 +2928,9 @@ screentables:
 spr_bgs:
     dc.l spr_bg1,spr_bg2
 
+spr_bgs2:
+    dc.l spr_bg3,spr_bg4
+
 play_sound:
     dc.l 0
 
@@ -2788,7 +2982,25 @@ current_sprite_sequence_struct:
     ds.l 1 ; address of animated sprite definition
     ds.l 1 ; address of next entry in sequence
 
+current_sprite_sequence_struct2:
+    ds.w 1 ; counter
+    ds.l 1 ; address of animated sprite definition
+    ds.l 1 ; address of next entry in sequence
+
 current_ani_sprite_struct: ; holds data of the currently displayed animated sprite
+    ; this struct needs to contain:
+    ; - 0w: counter which counts to (including) 0 (delay value)
+    ; - 2l: pointer to the sprite data (base address)
+    ; - 6w: offset to the correct shift (sprite_size_per_shift(384) bytes * shift (x % 16))
+    ; - 8w: offset to the screen address (230 * y coordinate + x offset (x // 16 * 8))
+    ; - 10l: pointer to the *next* position in the animated sprite definition (f.e. ani_spr_cursor)
+    ds.w 1 ; counter
+    ds.l 1 ; base sprite data address
+    ds.w 1 ; shift offset
+    ds.w 1 ; screen address offset
+    ds.l 1 ; next position in the definition
+
+current_ani_sprite_struct2: ; holds data of the currently displayed animated sprite
     ; this struct needs to contain:
     ; - 0w: counter which counts to (including) 0 (delay value)
     ; - 2l: pointer to the sprite data (base address)
@@ -2847,6 +3059,10 @@ spr_cursor_legs2:
 spr_bg1:
     ds.l 1+4*16 ; start address + 4 planes * 16 lines
 spr_bg2:
+    ds.l 1+4*16 ; start address + 4 planes * 16 lines
+spr_bg3:
+    ds.l 1+4*16 ; start address + 4 planes * 16 lines
+spr_bg4:
     ds.l 1+4*16 ; start address + 4 planes * 16 lines
 
 fontcharactersize equ 256 ; the char in the font (which is only part of the full character...) takes up that many bytes: 2 words(planes) * 64 lines = 128 words = 256 bytes
