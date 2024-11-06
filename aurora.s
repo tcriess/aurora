@@ -83,6 +83,11 @@ bot_lines       equ     32
     add.l #230,d0
     dbra d7,.mkscreentable2
 
+    ; set the new palette
+    ; movem.l my_pal,d0-d7
+    movem.l pal_start,d0-d7
+    movem.l d0-d7,$ffff8240.w
+
 ; get the (new) screen address (make sure it has the lower byte = 0)
     move.l #scrn,d0
     add.l #255,d0
@@ -109,15 +114,6 @@ bot_lines       equ     32
     add.l #230*(28+200+bot_lines-64),d0 ; scroller is at address screenstart + 160 (first line) + 230 * 28 (upper border) + 230 * 228 (at the very end) - 230 * 64
     addq.l #4,d0 ; planes 3+4 instead of 1+2
     move.l d0,scrollscraddr1
-
-    moveq #-1,d0
-    ; new screen still in d1
-    jsr set_scrn
-
-; set the new palette
-    ; movem.l my_pal,d0-d7
-    movem.l pal_start,d0-d7
-    movem.l d0-d7,$ffff8240.w
 
     ; sooo, mal etwas grafik auf den screen
     
@@ -521,6 +517,10 @@ bot_lines       equ     32
     move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
 
     endr
+
+    moveq #-1,d0
+    ; new screen still in d1
+    jsr set_scrn
 
     move.l screen1,a6
     move.l screen2,a5
@@ -1564,8 +1564,8 @@ my_70:
     dcb.w   13,$4e71 ; 13*4 = 52 cycles
     endr
 
-; 91 lines until the bottom border!
-    rept    91
+; 91 lines until the bottom border, we split this into the final 31 lines and the top 60 lines (the final 31 lines contain the scrolltext)!
+    rept    60
 
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
@@ -1586,6 +1586,38 @@ my_70:
 
     dcb.w   13,$4e71 ; 13*4 = 52 cycles
     endr ; 512 cycles per line
+
+; here starts the scroller, so we can adjust the palette in the following 64 lines
+    rept    31
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome 8 cycles
+    move.b  d4,(a1)         ; to lo-res     8 cycles    
+
+    ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
+    dcb.w   64,$4e71 ; 89*4 = 356 cycles
+    lea pal_start,a2 ; 12c
+    move.w #$8240,a6 ; 8c
+    movem.l (a2),d0-d1/d5-d7/a3-a5 ; 76c
+
+* RIGHT AGAIN...
+    move.b  d4,(a0) ; 8 cycles
+    move.b  d3,(a0) ; 8 cycles
+
+    ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    nop
+    move.l a3,24(a6) ; 16c
+    move.l a4,28(a6) ; 16c
+    move.l a5,32(a6) ; 16c
+* EXTRA!
+    move.b  d3,(a1) ; 8 cycles
+    nop ; 4 cycles
+    move.b  d4,(a1) ; 8 cycles
+
+    ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    nop
+    movem.l d0-d1/d5-d7,(a6) ; 48c
+    endr ; 512 cycles per line
+
 
 * FINAL LINE...
 * LEFT HAND BORDER!
@@ -1671,34 +1703,6 @@ my_70:
     beq .nosound
     move.l d5,a5
     move.w #$8800,a6
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 0
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 1
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 2
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 3
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 4
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 5
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 6
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 7
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 8
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 9
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 10
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 11
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 12
-    ;move.b (a5)+,(a6)
-    ;move.b (a5)+,2(a6) ; reg 13
 
     move.w (a5)+,d5
     movep.w d5,0(a6) ; reg 0
@@ -1729,10 +1733,8 @@ my_70:
     move.w (a5)+,d5
     movep.w d5,0(a6) ; reg 13
 
-    ; snd_keyclick2
     move.l #0,play_sound
 .nosound:
-
     ; todo: get rid of most of the following code, it is not required any more
     move.w curr_blink,d0
     subq #1,d0
@@ -1791,45 +1793,12 @@ switch_scr:
     move.w d4,fontoffset1
     move.w d5,fontoffset2
 
-    ;move.l #$ff8201,a0
-    ;movep.w d0,0(a0)
-
 exit_vbi:
 ; restore registers
     movem.l (sp)+,d0-d7/a0-a6
     move.w  (a7)+,sr
 
-;; now set up timer B to do the bottom border
-;    clr.b b_control.w             ; timer B off!
-;    move.b #b_lines,b_data.w       ; counter in
-;    move.b #8,b_control.w          ; timer B on!
     rte
-
-; new timer b / hbl (called "somewhere" on the last line)
-;my_120:
-;    movem.l d0/a0,-(sp)
-
-;; wait for counter
-;    move.w #b_data,a0
-;    move.b (a0),d0 ; get count value
-;.pause:
-;    cmp.b (a0),d0 ; wait for counter change
-;    beq.s .pause
-;; exactly on the next line now
-
-;; into 60Hz
-;    eor.b   #2,$ffff820a.w
-
-;    rept    15
-;    nop
-;    endr
-
-;; back into 50 Hz
-;    eor.b   #2,$ffff820a.w
-
-;    movem.l (a7)+,d0/a0
-;    bclr    #0,$fffffa0f.w ; interrupt in service register A, bit 0 = timer b
-;    rte
 
 ; initialize screen
 init_screen:
