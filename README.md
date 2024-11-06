@@ -1,0 +1,3 @@
+# Aurora 4kb intro
+
+Meet Aurora, the poor little cursor. She's trying to get to her friend who is outside the screen border...

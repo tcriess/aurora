@@ -1,0 +1,4 @@
+Title: Aurora
+Author: tecer
+Compo: ST/E 4kb intro
+Machine: 1040 STF (1MB required)
