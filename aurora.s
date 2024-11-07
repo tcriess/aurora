@@ -1588,16 +1588,17 @@ my_70:
     endr ; 512 cycles per line
 
 ; here starts the scroller, so we can adjust the palette in the following 64 lines
-    rept    31
+; first line is special as we load the address registers
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
     move.b  d4,(a1)         ; to lo-res     8 cycles    
 
     ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
-    dcb.w   64,$4e71 ; 89*4 = 356 cycles
-    lea pal_start,a2 ; 12c
+    dcb.w   62,$4e71
+    lea scrollerpals,a5 ; 12c
+    move.l (a5)+,a2
     move.w #$8240,a6 ; 8c
-    movem.l (a2),d0-d1/d5-d7/a3-a5 ; 76c
+    movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1605,9 +1606,9 @@ my_70:
 
     ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
     nop
-    move.l a3,24(a6) ; 16c
-    move.l a4,28(a6) ; 16c
-    move.l a5,32(a6) ; 16c
+    move.l d7,24(a6) ; 16c
+    move.l a3,28(a6) ; 16c
+    move.l a4,32(a6) ; 16c
 * EXTRA!
     move.b  d3,(a1) ; 8 cycles
     nop ; 4 cycles
@@ -1615,7 +1616,36 @@ my_70:
 
     ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
     nop
-    movem.l d0-d1/d5-d7,(a6) ; 48c
+    movem.l d0-d2/d5-d6,(a6) ; 48c
+
+    rept    30
+* LEFT HAND BORDER!
+    move.b  d3,(a1)         ; to monochrome 8 cycles
+    move.b  d4,(a1)         ; to lo-res     8 cycles    
+
+    ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
+    dcb.w   65,$4e71
+    move.l (a5)+,a2 ; 12c
+    move.w #$8240,a6 ; 8c
+    movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
+
+* RIGHT AGAIN...
+    move.b  d4,(a0) ; 8 cycles
+    move.b  d3,(a0) ; 8 cycles
+
+    ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    nop
+    move.l d7,24(a6) ; 16c
+    move.l a3,28(a6) ; 16c
+    move.l a4,32(a6) ; 16c
+* EXTRA!
+    move.b  d3,(a1) ; 8 cycles
+    nop ; 4 cycles
+    move.b  d4,(a1) ; 8 cycles
+
+    ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    nop
+    movem.l d0-d2/d5-d6,(a6) ; 48c
     endr ; 512 cycles per line
 
 
@@ -2783,6 +2813,72 @@ pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the 
     ;dc.w $0777,$0500,$0050,$0005,$0550,$0055,$0505,$0555
     ; incbin 'spr_pal.dat'
 
+scrollerpals: ; 64 palettes
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred1
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+
 scrollerpalred1:
     dc.w $0611 ; 0 %0000 bg
     dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
@@ -2802,6 +2898,42 @@ scrollerpalred1:
     dc.w $0500 ; 15 scroller main color
 
 scrollerpalred2:
+    dc.w $0711 ; 0 %0000 bg
+    dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0000 ; 3 inital cursor color (black)
+    dc.w $0400 ; 4 scroller border left
+    dc.w $0400 ; 5 scroller border left
+    dc.w $0400 ; 6 scroller border left
+    dc.w $0400 ; 7 scroller border left
+    dc.w $0300 ; 8 scroller border right
+    dc.w $0300 ; 9 scroller border right
+    dc.w $0300 ; 10 scroller border right
+    dc.w $0300 ; 11 scroller border right
+    dc.w $0600 ; 12 scroller main color
+    dc.w $0600 ; 13 scroller main color
+    dc.w $0600 ; 14 scroller main color
+    dc.w $0600 ; 15 scroller main color
+
+scrollerpalred3:
+    dc.w $0711 ; 0 %0000 bg
+    dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0000 ; 3 inital cursor color (black)
+    dc.w $0400 ; 4 scroller border left
+    dc.w $0400 ; 5 scroller border left
+    dc.w $0400 ; 6 scroller border left
+    dc.w $0400 ; 7 scroller border left
+    dc.w $0300 ; 8 scroller border right
+    dc.w $0300 ; 9 scroller border right
+    dc.w $0300 ; 10 scroller border right
+    dc.w $0300 ; 11 scroller border right
+    dc.w $0600 ; 12 scroller main color
+    dc.w $0600 ; 13 scroller main color
+    dc.w $0600 ; 14 scroller main color
+    dc.w $0600 ; 15 scroller main color
+
+scrollerpalred4:
     dc.w $0711 ; 0 %0000 bg
     dc.w $0666 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0555 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
