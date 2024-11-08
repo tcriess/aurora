@@ -1143,7 +1143,7 @@ my_70:
     ; H: 308c (77 nops)
 
     ; I - sound sequence
-    lea current_snd_sequence_struct,a3 ; currently executed palette sequence position
+    lea current_snd_sequence_struct,a3 ; currently executed sound sequence position
     ; - 0w: counter
     ; - 2l: address of snd
     ; - 6l: address of next entry in sequence
@@ -1158,7 +1158,7 @@ my_70:
     bge.s .current_snd_seq_cnt_ok
     ; things to do when the current snd sequence counter is <0 (i.e. jump to the next entry in the sequence)
     ;INNER CODE 1
-    move.l 6(a3),a4 ; a4: point to the next position in the palette sequence
+    move.l 6(a3),a4 ; a4: point to the next position in the sound sequence
     move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
     move.w (a4),d2 ; new counter
     move.l a5,play_sound
@@ -1176,8 +1176,44 @@ my_70:
     nop
     nop
 .current_snd_seq_cont:
-    move.w d2,(a3) ; write back the counter to current_sprite_sequence_struct
+    move.w d2,(a3) ; write back the counter to current_snd_sequence_struct
     ; I: 176c (44 nops)
+
+    ; J - scrollerpal sequence
+    lea current_scrollerpal_sequence_struct,a3 ; currently executed scroller palette sequence position
+    ; - 0w: counter
+    ; - 2l: address of palette table
+    ; - 6l: address of next entry in sequence
+    ; sequence entry:
+    ; - 0w: delay
+    ; - 2l: address of palette table
+    ; - 6w: offset to next entry
+    
+    move.w (a3),d2 ; counter
+    move.l 2(a3),a5 ; current palette table addr
+    subq #1,d2
+    bge.s .current_scrpal_seq_cnt_ok
+    ; things to do when the current scrollerpal sequence counter is <0 (i.e. jump to the next entry in the sequence)
+    ;INNER CODE 1
+    move.l 6(a3),a4 ; a4: point to the next position in the scrollerpal sequence
+    move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
+    move.w (a4),d2 ; new counter
+
+    move.l 2(a4),2(a3) ; next current scrollerpal table
+    add.w d3,a4 ; next entry in the sequence
+    move.l a4,6(a3)
+    ;/INNER CODE 1
+    bra.s .current_scrpal_seq_cont
+.current_scrpal_seq_cnt_ok:
+    ; nops for INNER CODE 1
+    dcb.w 22,$4e71 ; 88c
+
+    ; following two nops to even out the cycles of the bge/bra construct
+    nop
+    nop
+.current_scrpal_seq_cont:
+    move.w d2,(a3) ; write back the counter to current_scrollerpal_sequence_struct
+    ; J: 156c (39 nops)
     
 
 ;; sprite code
@@ -1256,7 +1292,8 @@ my_70:
     ;dcb.w 2630,$4e71 ; A-G
     ;dcb.w 2553,$4e71 ; A-H
     ;dcb.w 2509,$4e71 ; A-I, without E2-G2
-    dcb.w 911,$4e71 ; A-I, with E2-G2
+    ;dcb.w 911,$4e71 ; A-I, with E2-G2
+    dcb.w 872,$4e71 ; A-J, with E2-G2
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -1594,9 +1631,10 @@ my_70:
     move.b  d4,(a1)         ; to lo-res     8 cycles    
 
     ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
-    dcb.w   62,$4e71
-    lea scrollerpals,a5 ; 12c
-    move.l (a5)+,a2
+    dcb.w   60,$4e71
+    move.l current_scrollerpal_sequence_struct+2,a5
+    ;lea scrollerpals,a5 ; 12c
+    move.l (a5)+,a2 ; 12c
     move.w #$8240,a6 ; 8c
     movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
 
@@ -1666,14 +1704,24 @@ my_70:
     ;move.l (a4)+,(a3)+
     ;move.l (a4)+,(a3)+
 
-    dcb.w   89,$4e71 ; 89*4 = 356 cycles
+    ; dcb.w   89,$4e71 ; 89*4 = 356 cycles
+    dcb.w   57,$4e71
+    move.l (a5)+,a2 ; 12c
+    move.w #$8240,a6 ; 8c
+    movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
+
+    move.l d5,16(a6)
+    move.l d6,20(a6)
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
     move.b  d3,(a0) ; 8 cycles
 
-    dcb.w   13,$4e71 ; 13*4 = 52 cycles
-
+    ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    nop
+    move.l d7,24(a6) ; 16c
+    move.l a3,28(a6) ; 16c
+    move.l a4,32(a6) ; 16c
 * EXTRA!
     move.b  d3,(a1) ; 8 cycles
     nop ; 4 cycles
@@ -1684,7 +1732,9 @@ my_70:
 ;    dcb.w   8,$4e71 ; 8*4 = 32 cycles
 ;    move.b  d4,(a0) ; 8 cycles
 ;    move.b  d3,(a0) ; 8 cycles
-    dcb.w   8,$4e71 ; 8*4 = 32 cycles
+    movem.l d0-d2,(a6) ; 32c
+
+    ;dcb.w   8,$4e71 ; 8*4 = 32 cycles
     move.b  d4,(a0) ; 8 cycles
     nop
     move.b  d3,(a0) ; 8 cycles
@@ -1709,19 +1759,29 @@ my_70:
     ;move.l (a4)+,(a3)+
     ;move.l (a4)+,(a3)+
 
-    dcb.w   89,$4e71 ; 356 cycles
+    ;dcb.w   89,$4e71 ; 356 cycles
+    dcb.w   65,$4e71
+    move.l (a5)+,a2 ; 12c
+    move.w #$8240,a6 ; 8c
+    movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
     move.b  d3,(a0)
 
-    dcb.w   13,$4e71 ; 52 cycles
+    ;dcb.w   13,$4e71 ; 52 cycles
+    nop
+    move.l d7,24(a6) ; 16c
+    move.l a3,28(a6) ; 16c
+    move.l a4,32(a6) ; 16c
 * EXTRA!
     move.b  d3,(a1)
     nop
     move.b  d4,(a1)
 
-    dcb.w   13,$4e71 ; 48 cycles
+    ;dcb.w   13,$4e71 ; 48 cycles
+    nop
+    movem.l d0-d2/d5-d6,(a6) ; 48c
     
     endr ; same as before, 512 cycles per line
 
@@ -2093,6 +2153,14 @@ init_sprite:
 
     lea current_snd_sequence_struct,a0
     lea snd_sequence,a1
+    move.w (a1),(a0) ; delay
+    move.l 2(a1),2(a0)
+    add.w 6(a1),a1
+    move.l a1,6(a0)
+
+
+    lea current_scrollerpal_sequence_struct,a0
+    lea scrollerpal_sequence,a1
     move.w (a1),(a0) ; delay
     move.l 2(a1),2(a0)
     add.w 6(a1),a1
@@ -2813,7 +2881,103 @@ pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the 
     ;dc.w $0777,$0500,$0050,$0005,$0550,$0055,$0505,$0555
     ; incbin 'spr_pal.dat'
 
+scrollerpal_sequence:
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+4 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+8 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+12 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+16 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+20 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+24 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+28 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+32 ; 2l: address of 64 palette addresses
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.w 2 ; 0w: delay
+    dc.l scrollerpals+36 ; 2l: address of 64 palette addresses
+    dc.w -72 ; 6w: offset to the next entry (0: repeat forever)
+
 scrollerpals: ; 64 palettes
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred1
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred2
+    dc.l scrollerpalred1
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred3
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
+    dc.l scrollerpalred4
     dc.l scrollerpalred1
     dc.l scrollerpalred1
     dc.l scrollerpalred1
@@ -3068,6 +3232,11 @@ snd_bell_data:
     dc.b 13,9
 
     bss
+current_scrollerpal_sequence_struct:
+    ds.w 1 ; counter
+    ds.l 1 ; address of the palettetable
+    ds.l 1 ; address of the next entry in the sequence
+
 current_pal_sequence_struct:
     ds.w 1 ; counter
     ds.l 1 ; address of the palette
