@@ -19,7 +19,8 @@ def mapper(c):
     return r
 
 text = " ".join(["" for _ in range(100)])
-text += "hello silliventure...  this little intro is a fully synchronized sprite and scroller breaking all borders! code by tecer $% rulez"
+text += "$% $% $% hello sillyventure...  poor little cursor ... wants to break the border ...  $% $% $% "
+text += " and now... more color!  $% $% $% code by tecer - hacknology $% $% $%   thanks to leonard for the strinkler port and a lot of inspiration!  $% $% $%  thanks to james ingram for the coding tutorials!  $% $% $%  thanks to grey and the sv team for sillyventure!  $% $% $%"
 
 a = map(mapper, text)
-print(",".join(list(a)))
+print("    dc.b " + ",".join(list(a)))

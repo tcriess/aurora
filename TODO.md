@@ -5,4 +5,4 @@
 [x] palette sequence
 [x] maybe more animated sprites (now 2 sprite sequences)
 [x] scrolltext python script
-[ ] scrolltext palette changer
+[x] scrolltext palette changer
