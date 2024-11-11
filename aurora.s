@@ -1826,6 +1826,13 @@ my_70:
     ; now, the time critical stuff is done, and we still have a few cycles for sound...
 
 ; start counter handling
+    lea current_dosound_struct,a1
+    ; counter in 0(a1)
+    move.w 0(a1),d0
+    subq #1,d0
+    bgt .dosndexit
+    clr.w d0
+
     move.l play_sound,d5
     tst.l d5
     beq .nosound
@@ -1850,15 +1857,17 @@ my_70:
     tst.b d5 ; exit if zero
     beq.s .dosndexit
     ; update the current delay counter
+    clr.w d0
+    move.b d5,d0
 
     bra.s .dosndexit
 .dosndsettmpvar:
     ; set the tmp var
-    move.b d5,()
+    move.b d5,2(a1)
     bra.s .dosndnext
 .dosndtmpvar:
     ; read the tmpvar
-    move.b (),d6 ; tmpvar in d6.b
+    move.b 2(a1),d6 ; tmpvar in d6.b
     lsl.w #8,d5 ; register + 00 in d5.w
     ; a5 points to the increment (byte) and then the end condition (byte)
     move.b (a5)+,d0 ; increment in d0.b
@@ -1872,6 +1881,7 @@ my_70:
     bra.s .dosndnext ; d7.b <= d6.b
 
 .dosndexit:
+    move.w d0,0(a1) ; write back counter
 
     move.w (a5)+,d5
     movep.w d5,0(a6) ; reg 0
