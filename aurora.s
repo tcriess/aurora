@@ -1831,6 +1831,47 @@ my_70:
     beq .nosound
     move.l d5,a5
     move.w #$8800,a6
+.dosndnext:
+    move.w (a5)+,d5
+    btst #15,d5 ; highest bit set? (i.e. first byte is >= $80)
+    bne.s .dosndspecial ; bit is set - either delay (i.e. we are done here, or sequence is done)
+    ; if not: dump data into register
+    movep.w d5,0(a6)
+    bra.s .dosndnext
+.dosndspecial:
+    ; check if d5 = 1000 0000 xxxx xxxxx or 1000 0001 xxxx xxxx
+    move.w d5,d6
+    and.w #$FF00,d6
+    cmp.w $8000,d6
+    beq.s .dosndsettmpvar
+    cmp.w $8100,d6
+    beq.s .dosndtmpvar
+    ; otherwise: delay or exit
+    tst.b d5 ; exit if zero
+    beq.s .dosndexit
+    ; update the current delay counter
+
+    bra.s .dosndexit
+.dosndsettmpvar:
+    ; set the tmp var
+    move.b d5,()
+    bra.s .dosndnext
+.dosndtmpvar:
+    ; read the tmpvar
+    move.b (),d6 ; tmpvar in d6.b
+    lsl.w #8,d5 ; register + 00 in d5.w
+    ; a5 points to the increment (byte) and then the end condition (byte)
+    move.b (a5)+,d0 ; increment in d0.b
+    move.b (a5)+,d7 ; endcondition in d7.b
+.dosndtmploop:
+    move.b d6,d5 ; register + value in d5
+    movep.w d5,0(a6)
+    add.b d0,d6
+    cmp.b d7,d6
+    bgt.s .dosndtmploop ; d7.b > d6.b
+    bra.s .dosndnext ; d7.b <= d6.b
+
+.dosndexit:
 
     move.w (a5)+,d5
     movep.w d5,0(a6) ; reg 0
@@ -4875,6 +4916,29 @@ spr_bgs2:
 play_sound:
     dc.l 0
 
+; dosound (XBIOS32) definition:
+; $0x,<byte>: write <byte> to register x
+; $80,<byte>: write <byte> to temporary register
+; $81,<byte1>,<byte2>,<byte3>: <byte1> register no to write temporary value to, <byte2> increment of the temporary value, <byte3> final value for breaking the loop
+; $82-$ff <byte>: wait <byte> jiffies (20ms, 1 vbi if 50Hz), if 0: exit
+
+snd_keyclick_dosound:
+    dc.b $00,$3B ; register 0 (chan 1)
+    dc.b $01,$00 ; register 1 (chan 1)
+    dc.b $02,$00 ; register 2 (chan 2)
+    dc.b $03,$00 ; register 3 (chan 2)
+    dc.b $04,$00 ; register 4 (chan 3)
+    dc.b $05,$00 ; register 5 (chan 3)
+    dc.b $06,$00 ; register 6 (noise)
+    dc.b $07,$FE ; register 7 (chan select)
+    dc.b $08,$10 ; register 8 (amplitude chan 1)
+    dc.b $09,$00 ; register 9 (amplitude chan 2)
+    dc.b $0a,$00 ; register 10 (amplitude chan 3)
+    dc.b $0b,$80 ; register 11 (envelope)
+    dc.b $0c,$01 ; register 12
+    dc.b $0d,$03 ; register 13
+    dc.b $ff,$00 ; finish
+
 snd_keyclick_data:
     dc.b $00,$3B ; register 0 (chan 1)
     dc.b $01,$00 ; register 1 (chan 1)
@@ -4938,6 +5002,12 @@ current_snd_sequence_struct:
     ds.w 1 ; counter
     ds.l 1 ; address of the sounddata
     ds.l 1 ; address of the next entry in the sequence
+
+current_dosound_struct:
+    ds.w 1 ; counter
+    ds.b 1 ; temp value
+    ds.b 1 ; filler
+    ds.l 1 ; address of next entry in dosound (after delay!)
 
 current_sprite_sequence_struct:
     ds.w 1 ; counter

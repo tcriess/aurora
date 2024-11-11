@@ -1,4 +1,5 @@
 [ ] move some of the screen switch logic to front code
+[ ] use dosound format for ym register data
 [x] animated cursor sprite
 [x] sprite sequence
 [x] sound sequence
