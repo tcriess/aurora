@@ -1172,6 +1172,13 @@ my_70:
     ; - 0w: delay
     ; - 2l: address of snd
     ; - 6w: offset to next entry
+
+    lea current_dosound_sequence_struct,a2
+    ; - 0w: counter
+    ; - 2l: address of the current entry in the dosound sequence
+    ; - 6b: current value of the temporary var
+    ; - 7b: filler (0)
+    ; ; - 8l: next entry in the dosound sequence - not required
     
     move.w (a3),d2 ; counter
     move.l 2(a3),a5 ; current snd addr
@@ -1182,7 +1189,10 @@ my_70:
     move.l 6(a3),a4 ; a4: point to the next position in the sound sequence
     move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
     move.w (a4),d2 ; new counter
-    move.l a5,play_sound
+    ;move.l a5,play_sound
+    move.l a5,2(a2)
+    move.w #0,0(a2) ; this counter works differently
+    move.b #0,7(a2) ; clear temp var
 
     move.l 2(a4),2(a3) ; next current snd
     add.w d3,a4 ; next entry in the sequence
@@ -1191,14 +1201,14 @@ my_70:
     bra.s .current_snd_seq_cont
 .current_snd_seq_cnt_ok:
     ; nops for INNER CODE 1
-    dcb.w 27,$4e71 ; 108c
+    dcb.w 34,$4e71 ; 108c - 20c + 16c + 16c + 16c
 
     ; following two nops to even out the cycles of the bge/bra construct
     nop
     nop
 .current_snd_seq_cont:
     move.w d2,(a3) ; write back the counter to current_snd_sequence_struct
-    ; I: 176c (44 nops)
+    ; I: 216c (54 nops)
 
     ; J - scrollerpal sequence
     lea current_scrollerpal_sequence_struct,a3 ; currently executed scroller palette sequence position
@@ -1309,10 +1319,10 @@ my_70:
     ;dcb.w 2704,$4e71 ; A-G without E
     ;dcb.w 2630,$4e71 ; A-G
     ;dcb.w 2553,$4e71 ; A-H
-    ;dcb.w 2509,$4e71 ; A-I, without E2-G2
-    ;dcb.w 911,$4e71 ; A-I, with E2-G2
-    ;dcb.w 872,$4e71 ; A-J, with E2-G2
-    dcb.w 880,$4e71 ; A-J, with E2-G2, without D
+    ;dcb.w 2499,$4e71 ; A-I, without E2-G2
+    ;dcb.w 901,$4e71 ; A-I, with E2-G2
+    ;dcb.w 862,$4e71 ; A-J, with E2-G2
+    dcb.w 870,$4e71 ; A-J, with E2-G2, without D
 
 ; to 60Hz
     eor.b #2,$ffff820a.w
@@ -1823,96 +1833,158 @@ my_70:
     nop
     movem.l d0-d2/d5-d6,(a6) ; 48c
 
-    ; now, the time critical stuff is done, and we still have a few cycles for sound...
 
-; start counter handling
-    lea current_dosound_struct,a1
+; adapted code of the original dosound xbios routine (https://st-news.com/issues/st-news-volume-2-issue-3/education/the-xbios-dosound-function)
+    ; now, the time critical stuff is done, and we still have a few cycles for sound...
+    lea current_dosound_sequence_struct,a1
     ; counter in 0(a1)
     move.w 0(a1),d0
     subq #1,d0
-    bgt .dosndexit
-    clr.w d0
+    bgt .dosndexit2 ; counter still > 0, continue in the next vbi
 
-    move.l play_sound,d5
+    ; counter <=0 - continue here
+    clr.w d0 ; reset counter to 0
+    move.l 2(a1),d5 ; address of current dosound command entry
     tst.l d5
-    beq .nosound
+    beq .dosndexit2
     move.l d5,a5
-    move.w #$8800,a6
 .dosndnext:
-    move.w (a5)+,d5
-    btst #15,d5 ; highest bit set? (i.e. first byte is >= $80)
-    bne.s .dosndspecial ; bit is set - either delay (i.e. we are done here, or sequence is done)
-    ; if not: dump data into register
-    movep.w d5,0(a6)
+    move.b (a5)+,d5 ; command
+    bmi.s .dosndspecial ; negative = bit 7 set
+    move.b d5,$ffff8800
+    cmpi.b #$07,d5 ; register 7?
+    bne.s .dosndwrreg ; no
+    ; it was register 7, so we do some special treatment
+    move.b (a5)+,d1
+    and.b #$3f,d1 ; isolate bits 0-5
+    move.b $ffff8800,d5 ; read mixer
+    and.b #$c0,d5 ; isolate bits 6-7
+    or.b d1,d5 ; "or" them
+    move.b d5,$ffff8802
     bra.s .dosndnext
+.dosndwrreg:
+    move.b (a5)+,$ffff8802
+    bra .dosndnext
 .dosndspecial:
-    ; check if d5 = 1000 0000 xxxx xxxxx or 1000 0001 xxxx xxxx
-    move.w d5,d6
-    and.w #$FF00,d6
-    cmp.w $8000,d6
-    beq.s .dosndsettmpvar
-    cmp.w $8100,d6
-    beq.s .dosndtmpvar
-    ; otherwise: delay or exit
-    tst.b d5 ; exit if zero
-    beq.s .dosndexit
-    ; update the current delay counter
-    clr.w d0
-    move.b d5,d0
+    addq.b #1,d5 ; was the command $ff
+    bpl .dosndsettimer ; yes, set the delay timer
+    cmpi.b #$81,d5 ; was the command $80 (set temp. reg.)
+    bne.s .dosndspecial2 ; no
+    ; set the temporary reg.
+    move.b (a5)+,6(a1)
+    bra .dosndnext
 
+.dosndspecial2:
+    cmpi.b  #$82,d5 ; was the command $81
+    bne.s .dosndsettimer ; no, set the delay timer
+
+    move.b (a5)+,$ffff8800 ; select register
+    move.b (a5)+,d5 ; increment value
+    add.b d5,6(a1) ; add increment to temp reg.
+    move.b (a5)+,d5 ; end value
+    move.b 6(a1),$ffff8802 ; value to chip
+    cmp.b 6(a1),d5
+    beq .dosndexit ; end value reached
+    subq.w #4,a5 ; pointer back to the same command
     bra.s .dosndexit
-.dosndsettmpvar:
-    ; set the tmp var
-    move.b d5,2(a1)
-    bra.s .dosndnext
-.dosndtmpvar:
-    ; read the tmpvar
-    move.b 2(a1),d6 ; tmpvar in d6.b
-    lsl.w #8,d5 ; register + 00 in d5.w
-    ; a5 points to the increment (byte) and then the end condition (byte)
-    move.b (a5)+,d0 ; increment in d0.b
-    move.b (a5)+,d7 ; endcondition in d7.b
-.dosndtmploop:
-    move.b d6,d5 ; register + value in d5
-    movep.w d5,0(a6)
-    add.b d0,d6
-    cmp.b d7,d6
-    bgt.s .dosndtmploop ; d7.b > d6.b
-    bra.s .dosndnext ; d7.b <= d6.b
+
+.dosndsettimer:
+    move.b (a5)+,d0
+    bne.s .dosndexit2
+    move.w #0,a5
 
 .dosndexit:
+    move.l a5,2(a1) ; new current entry
+.dosndexit2:
     move.w d0,0(a1) ; write back counter
 
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 0
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 1
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 2
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 3
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 4
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 5
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 6
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 7
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 8
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 9
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 10
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 11
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 12
-    move.w (a5)+,d5
-    movep.w d5,0(a6) ; reg 13
+; start dosound handling
 
-    move.l #0,play_sound
+;    lea current_dosound_sequence_struct,a1
+;    ; counter in 0(a1)
+;    move.w 0(a1),d0
+;    subq #1,d0
+;    bgt .dosndexit
+;    clr.w d0
+;    move.l 2(a1),a5
+;    move.w #$8800,a6
+;.dosndnext:
+;    move.w (a5)+,d5
+;    btst #15,d5 ; highest bit set? (i.e. first byte is >= $80)
+;    bne.s .dosndspecial ; bit is set - either delay (i.e. we are done here, or sequence is done)
+;    ; if not: dump data into register
+;    movep.w d5,0(a6)
+;    bra.s .dosndnext
+;.dosndspecial:
+;    ; check if d5 = 1000 0000 xxxx xxxxx or 1000 0001 xxxx xxxx
+;    move.w d5,d6
+;    and.w #$FF00,d6
+;    cmp.w $8000,d6
+;    beq.s .dosndsettmpvar
+;    cmp.w $8100,d6
+;    beq.s .dosndtmpvar
+;    ; otherwise: delay or exit
+;    tst.b d5 ; exit if zero
+;    beq.s .dosndexit_setback
+;    ; update the current delay counter
+;    clr.w d0
+;    move.b d5,d0
+;
+;    bra.s .dosndexit
+;.dosndsettmpvar:
+;    ; set the tmp var
+;    move.b d5,6(a1)
+;    bra.s .dosndnext
+;.dosndtmpvar:
+;    ; read the tmpvar
+;    move.b 6(a1),d6 ; tmpvar in d6.b
+;    lsl.w #8,d5 ; register + 00 in d5.w
+;    ; a5 points to the increment (byte) and then the end condition (byte)
+;    move.b (a5)+,d0 ; increment in d0.b
+;    move.b (a5)+,d7 ; endcondition in d7.b
+;.dosndtmploop:
+;    move.b d6,d5 ; register + value in d5
+;    movep.w d5,0(a6)
+;    add.b d0,d6
+;    cmp.b d7,d6
+;    bgt.s .dosndtmploop ; d7.b > d6.b
+;    bra.s .dosndnext ; d7.b <= d6.b
+;.dosndexit_setback:
+;    subq #2,a5 ; reset the current entry to stay at the end marker
+;.dosndexit:
+;    move.w d0,0(a1) ; write back counter
+;    move.l a5,2(a1) ; new current entry
+
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 0
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 1
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 2
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 3
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 4
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 5
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 6
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 7
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 8
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 9
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 10
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 11
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 12
+    ;move.w (a5)+,d5
+    ;movep.w d5,0(a6) ; reg 13
+
+    ;move.l #0,play_sound
 .nosound:
     ; todo: get rid of most of the following code, it is not required any more
     move.w curr_blink,d0
@@ -2247,6 +2319,10 @@ init_sprite:
     add.w 6(a1),a1
     move.l a1,6(a0)
 
+    lea current_dosound_sequence_struct,a0
+    move.w #0,(a0) ; counter (different from other counters!)
+    move.l 2(a1),2(a0) ; address of first entry of dosound
+    move.w #0,6(a0) ; temp var + filler
 
     lea current_scrollerpal_sequence_struct,a0
     lea scrollerpal_sequence,a1
@@ -2506,8 +2582,8 @@ pal_sequence:
 
 snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
     dc.w 105
-    dc.l snd_keyclick_data
-    dc.w 8
+    dc.l snd_keyclick_dosound
+    dc.w 0
 
     dc.w 100
     dc.l snd_keyclick_data
@@ -4895,9 +4971,6 @@ vol3	dc.b	$F,0
 
 scrolltext:
     include 'scrolltext.s'
-    ;dc.b 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,30,31,0,30,31,0,30,31,0,8,5,12,12,15,0,19,9,12,12,25,22,5,14,20,21,18,5,27,27,27,0,0,16,15,15,18,0,12,9,20,20,12,5,0,3,21,18,19,15,18,0,27,27,27,0,23,1,14,20,19,0,20,15,0,2,18,5,1,11,0,20,8,5,0,2,15,18,4,5,18,0,27,27,27,0,0,30,31,0,30,31,0,30,31,0,0,1,14,4,0,14,15,23,27,27,27,0,13,15,18,5,0,3,15,12,15,18,29,0,0,30,31,0,30,31,0,30,31,0,3,15,4,5,0,2,25,0,20,5,3,5,18,0,28,0,8,1,3,11,14,15,12,15,7,25,0,30,31,0,30,31,0,30,31,0,0
-    ;dc.b 'HELLO_HELLO_HELLO__SILLYVENTURE__THIS_IS_A_FULLY_SYNCED_SCROLLER____NO_BLITTER____NO_STE___JUST_PLAIN_ST____THANKS_TO__'
-    ;dc.b 'LEONARD_FOR_THE_FANTASTIC_STRINKLER____THANKS_TO_GREY_AGAIN___THANKS_TO_ALL_THE_NICE_ATARI_PEOPLE_____________________'
 scrolltextsize equ *-scrolltext
     even
 screen_toggle:
@@ -5013,8 +5086,9 @@ current_snd_sequence_struct:
     ds.l 1 ; address of the sounddata
     ds.l 1 ; address of the next entry in the sequence
 
-current_dosound_struct:
+current_dosound_sequence_struct:
     ds.w 1 ; counter
+    ds.l 1 ; address of the current entry in dosound
     ds.b 1 ; temp value
     ds.b 1 ; filler
     ds.l 1 ; address of next entry in dosound (after delay!)
