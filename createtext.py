@@ -20,7 +20,7 @@ def mapper(c):
 
 text = " ".join(["" for _ in range(100)])
 text += "$% $% $% hello sillyventure...  poor little cursor ... wants to break the border ...  $% $% $% "
-text += " and now... more color!  $% $% $% code by tecer - hacknology $% $% $%   thanks to leonard for the strinkler port and a lot of inspiration!  $% $% $%  thanks to james ingram for the coding tutorials!  $% $% $%  thanks to grey and the sv team for sillyventure!  $% $% $%"
+text += " and now... more color!  $% $% $% code by tecer - hacknology $% $% $%   thanks to leonard for the strinkler port and a lot of inspiration!  $% $% $%  thanks to james ingram for the coding tutorials! $% $% $%  greetz to the abbuc community  $% $% $%  thanks to grey and the sv team for sillyventure!  $% $% $%"
 
 a = map(mapper, text)
 print("    dc.b " + ",".join(list(a)))

@@ -103,420 +103,23 @@ bot_lines       equ     32
 ; set the new (larger) screen address
     move.l d0,d1
 
-    ;lea screentable1,a3
-    ;move.w #28+200+bot_lines,d7
-;.mkscreentable1:
-    ;move.l d0,(a3)+
-    ;add.l #230,d0
-    ;dbra d7,.mkscreentable1
-
     move.l d1,d0
     add.l #230*(28+200+bot_lines-64),d0 ; scroller is at address screenstart + 160 (first line) + 230 * 28 (upper border) + 230 * 228 (at the very end) - 230 * 64
     addq.l #4,d0 ; planes 3+4 instead of 1+2
     move.l d0,scrollscraddr1
 
-    ; sooo, mal etwas grafik auf den screen
-    
-    ; now, there are 27 lines of the lower border
-    ; we fill 19 lines now, then 8 lines with bricks
-    rept 20
-    ; the leftmost pixel (in hatari at least) is here 
-    ; move.l #$04000400,(a6)+
-    ; move.l #$04000400,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-; draw a left border
-    move.l #0,(a6)+ ;  #$0ff00ff0,(a6)+
-    move.l #0,(a6)+ ;  #$0ff00ff0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-; draw a right border
-    move.l #0,(a6)+ ;  #$000f000f,(a6)+
-    move.l #0,(a6)+ ;  #$000f000f,(a6)+
-    move.l #0,(a6)+ ;  #$f000f000,(a6)+
-    move.l #0,(a6)+ ;  #$f000f000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
-    move.l #0,(a6)+ ; #$00010001,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
+    ; fill screen with logo
 
+    lea logo_data,a5
+    move.w #200-1,d0
+.logoloop:
+    rept 26
+    move.l (a5)+,(a6)+
+    move.l #0,(a6)+
     endr
-
-    rept 4
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #$000f0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$fff00000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
-
-    endr
-
-    rept 4
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #$000f0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$00f0ff00,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
-
-    endr
-
-; save the initial sprite position
-    move.l a6,a1
-    add.l #24,a1
-    sub.l #230*4,a1
-    move.l a1,spr_position_addr
-
-    rept 200
-    ; the leftmost pixel (in hatari at least) is here 
-    ; move.l #$04000400,(a6)+
-    ; move.l #$04000400,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #$000f0000,(a6)+
-    move.l #$00000000,(a6)+
-; draw a left border
-    move.l #$0000f000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-; draw a right border
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #$00f00f00,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
-    move.l #0,(a6)+ ; #$00010001,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
-
-    endr
-
-; lower border
-    rept 4
-    ; the leftmost pixel (in hatari at least) is here 
-    ; move.l #$04000400,(a6)+
-    ; move.l #$04000400,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #$000f0000,(a6)+
-    move.l #$00000000,(a6)+
-; draw a left border
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-; draw a right border
-    move.l #$0000ffff,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$00f0ff00,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
-    move.l #0,(a6)+ ; #$00010001,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
-
-    endr
-
-    rept 4
-    ; the leftmost pixel (in hatari at least) is here 
-    ; move.l #$04000400,(a6)+
-    ; move.l #$04000400,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #$000f0000,(a6)+
-    move.l #$00000000,(a6)+
-; draw a left border
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-; draw a right border
-    move.l #$ffff0000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #$fff00000,(a6)+
-    move.l #$00000000,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+ ; #$00010001,(a6)+ <- rightmost visible pixel on hatari
-    move.l #0,(a6)+ ; #$00010001,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.l #0,(a6)+
-    move.w #0,(a6)+ ; 57 * 4 + 2 bytes = 230 bytes
-
-    endr
+    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
+    lea 22(a6),a6
+    dbra d0,.logoloop
 
     moveq #-1,d0
     ; new screen still in d1
@@ -550,15 +153,15 @@ bot_lines       equ     32
     lea raw_spr_empty_eye,a0
     lea spr_empty_eye,a1
     jsr prepare_sprite
-    lea raw_spr_cursor_legs1,a0
-    lea spr_cursor_legs1,a1
-    jsr prepare_sprite
-    lea raw_spr_cursor_legs2,a0
-    lea spr_cursor_legs2,a1
-    jsr prepare_sprite
-    lea raw_spr_cursor_eye,a0
-    lea spr_cursor_eye,a1
-    jsr prepare_sprite
+    ;lea raw_spr_cursor_legs1,a0
+    ;lea spr_cursor_legs1,a1
+    ;jsr prepare_sprite
+    ;lea raw_spr_cursor_legs2,a0
+    ;lea spr_cursor_legs2,a1
+    ;jsr prepare_sprite
+    ;lea raw_spr_cursor_eye,a0
+    ;lea spr_cursor_eye,a1
+    ;jsr prepare_sprite
     lea raw_spr_qm1,a0
     lea spr_qm1,a1
     jsr prepare_sprite
@@ -568,11 +171,14 @@ bot_lines       equ     32
     lea raw_spr_qm3,a0
     lea spr_qm3,a1
     jsr prepare_sprite
-    lea raw_spr_qm4,a0
-    lea spr_qm4,a1
+    lea raw_spr_em1,a0
+    lea spr_em1,a1
     jsr prepare_sprite
-    lea raw_spr_qm5,a0
-    lea spr_qm5,a1
+    lea raw_spr_em2,a0
+    lea spr_em2,a1
+    jsr prepare_sprite
+    lea raw_spr_em3,a0
+    lea spr_em3,a1
     jsr prepare_sprite
     jsr init_sprite
     ; jsr prepare_font
@@ -1846,7 +1452,7 @@ my_70:
     clr.w d0 ; reset counter to 0
     move.l 2(a1),d5 ; address of current dosound command entry
     tst.l d5
-    beq .dosndexit2
+    beq.s .dosndexit2
     move.l d5,a5
 .dosndnext:
     move.b (a5)+,d5 ; command
@@ -1861,10 +1467,10 @@ my_70:
     and.b #$c0,d5 ; isolate bits 6-7
     or.b d1,d5 ; "or" them
     move.b d5,$ffff8802
-    bra.s .dosndnext
+    bra.s .dosndnext ; continue on to the next
 .dosndwrreg:
-    move.b (a5)+,$ffff8802
-    bra .dosndnext
+    move.b (a5)+,$ffff8802 ; simply write the value to the register
+    bra.s .dosndnext ; continue on to the next
 .dosndspecial:
     addq.b #1,d5 ; was the command $ff
     bpl .dosndsettimer ; yes, set the delay timer
@@ -1872,7 +1478,7 @@ my_70:
     bne.s .dosndspecial2 ; no
     ; set the temporary reg.
     move.b (a5)+,6(a1)
-    bra .dosndnext
+    bra.s .dosndnext
 
 .dosndspecial2:
     cmpi.b  #$82,d5 ; was the command $81
@@ -1884,19 +1490,19 @@ my_70:
     move.b (a5)+,d5 ; end value
     move.b 6(a1),$ffff8802 ; value to chip
     cmp.b 6(a1),d5
-    beq .dosndexit ; end value reached
-    subq.w #4,a5 ; pointer back to the same command
-    bra.s .dosndexit
+    beq.s .dosndexit ; end value reached, store the new current entry
+    subq.l #4,a5 ; pointer back to the same command
+    bra.s .dosndexit ; the next iteration of the loop will happen in the next vbi, keep everything as is
 
 .dosndsettimer:
     move.b (a5)+,d0
-    bne.s .dosndexit2
-    move.w #0,a5
+    bne.s .dosndexit ; advance to the next command if timer value >0!
+    move.w #0,a5 ; delay value was $00 -> clear current address, stop sound
 
 .dosndexit:
     move.l a5,2(a1) ; new current entry
 .dosndexit2:
-    move.w d0,0(a1) ; write back counter
+    move.w d0,0(a1) ; write back counter (it is acutally only a byte in d0.b, but the upper byte of d0.w is cleared, so this should't be a problem)
 
 ; start dosound handling
 
@@ -1985,30 +1591,31 @@ my_70:
     ;movep.w d5,0(a6) ; reg 13
 
     ;move.l #0,play_sound
+
 .nosound:
     ; todo: get rid of most of the following code, it is not required any more
-    move.w curr_blink,d0
-    subq #1,d0
-    tst.b d0
-    bne cont_blink3
+    ;move.w curr_blink,d0
+    ;subq #1,d0
+    ;tst.b d0
+    ;bne cont_blink3
 
-do_blink2:
+;do_blink2:
     ; eor.w   #$0f0,$ffff8240.w ; do sth with palette bg color
  
-    move.w blink_rate,d0
-    ;lsl.w #1,d0
+;    move.w blink_rate,d0
+;    ;lsl.w #1,d0
 
-cont_blink3:
-    move.w d0,curr_blink
+;cont_blink3:
+;    move.w d0,curr_blink
 ; end counter handling
 
     move.l scrollpos,a2
-    move.w -2(a2),d5
+    ;move.w -2(a2),d5
     move.w (a2),d4
     bge.s .contscroll3
 
     lea scrolltextbuffer,a2 ; 12 c / 3 nops
-    move.w (a2),d4 ; 8 c / 2 nops
+    ;move.w (a2),d4 ; 8 c / 2 nops
 
 ;    bra.s .contscroll4 ; 12 c / 3 nops
 .contscroll3:
@@ -2020,29 +1627,49 @@ cont_blink3:
     move.w hw_screen,d7
     move.w #$8201,a0
     movep.w d7,0(a0)
+    ;bra.s exit_vbi
 
-    and.b #1,d0
-    beq.s switch_scr1
+    move.w screen_toggle,d0 ; maybe it is still in d0, but probably not
+    lea scrolleraddrtables,a0
+    move.l 0(a0,d0.w),a0 ; address of the scrolleraddrtable. here: 0 - address where the scroller screen start address is stored, font1, font2, character offsets, offset to add to scrollerpos
+    move.l 0(a0),a1
+    move.l 0(a1),scrollscraddr
 
-    move.w hw_screen2,d0
-    move.l scrollscraddr1,scrollscraddr
-    move.l #font,font_addr1
-    move.l #font,font_addr2
-    move.w d4,d5
-
-    addq.l #2,a2
-    move.l a2,scrollpos
-
-    bra.s switch_scr
-switch_scr1:
-    move.w hw_screen1,d0
-    move.l scrollscraddr2,scrollscraddr
-    move.l #font_shift_r,font_addr1
-    move.l #font_shift_l,font_addr2
-
-switch_scr:
+    move.l 4(a0),font_addr1
+    move.l 8(a0),font_addr2
+    
+    move.w 12(a0),d4
+    move.w 14(a0),d5
+    move.w (a2,d4.w),d4
+    move.w (a2,d5.w),d5
     move.w d4,fontoffset1
     move.w d5,fontoffset2
+    add.w 16(a0),a2
+    move.l a2,scrollpos
+
+;    btst.b #2,screen_toggle+1
+;    ;and.b #1,d0
+;    beq.s switch_scr1
+
+;    ;move.w hw_screen2,d0
+;    move.l scrollscraddr1,scrollscraddr
+;    move.l #font,font_addr1
+;    move.l #font,font_addr2
+;    move.w d4,d5
+;
+;    addq.l #2,a2
+;    move.l a2,scrollpos
+;
+;    bra.s switch_scr
+;switch_scr1:
+;    ;move.w hw_screen1,d0
+;    move.l scrollscraddr2,scrollscraddr
+;    move.l #font_shift_r,font_addr1
+;    move.l #font_shift_l,font_addr2
+
+;switch_scr:
+;    move.w d4,fontoffset1
+;    move.w d5,fontoffset2
 
 exit_vbi:
 ; restore registers
@@ -2312,16 +1939,19 @@ init_sprite:
     add.w 6(a1),a1
     move.l a1,6(a0)
 
+    ; the sound and dosound sequences work a little different, the delay is applied _before_ the sound is player, so we start with an empty current entry for both
     lea current_snd_sequence_struct,a0
     lea snd_sequence,a1
     move.w (a1),(a0) ; delay
-    move.l 2(a1),2(a0)
-    add.w 6(a1),a1
+    ;move.l 2(a1),2(a0)
+    move.l #0,2(a0)
+    ;add.w 6(a1),a1
     move.l a1,6(a0)
 
     lea current_dosound_sequence_struct,a0
     move.w #0,(a0) ; counter (different from other counters!)
-    move.l 2(a1),2(a0) ; address of first entry of dosound
+    ;move.l 2(a1),2(a0) ; address of first entry of dosound
+    move.l #0,2(a0)
     move.w #0,6(a0) ; temp var + filler
 
     lea current_scrollerpal_sequence_struct,a0
@@ -2560,13 +2190,9 @@ pick_sysfont_chars:
     dc.b $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$2e,$2d,$21,$0e,$0f ; P,Q,...,Z,.,-,!,[atarileft],[atariright]
 
 pal_sequence:
-    dc.w 2000 ; delay
+    dc.w 1000 ; delay
     dc.l pal_start ; address of the new palette
     dc.w 8 ; offset to the next entry
-    dc.w 1000 ; delay
-    dc.l pal_black ; address of the new palette
-    dc.w 0 ; offset to the next entry
-
     dc.w 25
     dc.l pal_border1 ; address of the new palette
     dc.w 8 ; offset to the next entry
@@ -2578,157 +2204,35 @@ pal_sequence:
     dc.w 8 ; offset to the next entry
     dc.w 5
     dc.l pal_border4 ; address of the new palette
-    dc.w -32 ; offset to the next entry
+    dc.w 8 ; offset to the next entry
+    dc.w 1000 ; delay
+    dc.l pal_black ; address of the new palette
+    dc.w 0 ; offset to the next entry
 
 snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
-    dc.w 105
+    dc.w 200
     dc.l snd_keyclick_dosound
+    dc.w 8
+
+    dc.w 300
+    dc.l snd_keyclick2_dosound
+    dc.w 8
+
+    dc.w 300
+    dc.l snd_bell_dosound
+    dc.w 8
+
+    dc.w 120
+    dc.l snd_bellriff_dosound
     dc.w 0
 
-    dc.w 100
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 100
-    dc.l snd_keyclick_data
-    dc.w 8
-
-    dc.w 100
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 0
+    ;dc.w 300
+    ;dc.l snd_bell2_dosound
+    ;dc.w -24
 
 
 
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 50
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_bell_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 10
-    dc.l snd_keyclick_data
-    dc.w 8
-    dc.w 25
-    dc.l snd_bell_data
-    dc.w -24
+
 
 spr_sequence:
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
@@ -2747,12 +2251,12 @@ spr_sequence:
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
+    dc.l ani_spr_em ; 2l: animated sprite definition
     dc.w 230*(28-4)+24 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
+    dc.l ani_spr_cursor ; 2l: animated sprite definition
     dc.w 230*(28-4)+32 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
@@ -2954,163 +2458,6 @@ spr_sequence:
 
 
 
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+128 ; 6w: screen address offset
-    dc.w 0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+128 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-
-
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l ani_spr_cursor_legs ; 2l: animated sprite definition
-    dc.w 230*(28-4)+24 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l ani_spr_cursor_legs ; 2l: animated sprite definition
-    dc.w 230*(28-4)+24 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*12 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+32 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l ani_spr_cursor_legs ; 2l: animated sprite definition
-    dc.w 230*(28-4)+32 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*4 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+32 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+32 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*12 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+40 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+40 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+48 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+48 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+56 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+56 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+64 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+64 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+72 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+72 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+80 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+88 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+96 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+104 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+112 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+120 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+128 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+136 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+144 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+152 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+160 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+168 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ; 2l: animated sprite definition
-    dc.w 230*(28-4)+176 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
 
 spr_sequence2:
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
@@ -3131,53 +2478,64 @@ ani_spr_cursor:
     endif
     dc.w -8 ; affset to the next entry (go backwards)
 
-ani_spr_cursor_legs:
-    dc.w 25 ; delay
-    dc.l spr_cursor_legs1 ; sprite data
-    dc.w 8 ; offset to the next entry
-    dc.w 25
-    dc.l spr_empty ; sprite data
-    dc.w 8 ; affset to the next entry (go backwards)
-    dc.w 25 ; delay
-    dc.l spr_cursor_legs2 ; sprite data
-    dc.w 8 ; offset to the next entry
-    dc.w 25
-    dc.l spr_empty ; sprite data
-    dc.w -24 ; affset to the next entry (go backwards)
+;ani_spr_cursor_legs:
+;    dc.w 25 ; delay
+;    dc.l spr_cursor_legs1 ; sprite data
+;    dc.w 8 ; offset to the next entry
+;    dc.w 25
+;    dc.l spr_empty ; sprite data
+;    dc.w 8 ; affset to the next entry (go backwards)
+;    dc.w 25 ; delay
+;    dc.l spr_cursor_legs2 ; sprite data
+;    dc.w 8 ; offset to the next entry
+;    dc.w 25
+;    dc.l spr_empty ; sprite data
+;    dc.w -24 ; affset to the next entry (go backwards)
 
 ani_spr_qm:
     dc.w 25
     dc.l spr_qm1
     dc.w 8
-    dc.w 10
+    dc.w 15
     dc.l spr_qm2
     dc.w 8
-    dc.w 5
+    dc.w 10
     dc.l spr_qm3
-    dc.w 8
-    dc.w 5
-    dc.l spr_qm4
-    dc.w 8
-    dc.w 5
-    dc.l spr_qm5
-    dc.w -32
+    dc.w -16
+    ;dc.w 5
+    ;dc.l spr_qm4
+    ;dc.w 8
+    ;dc.w 5
+    ;dc.l spr_qm5
+    ;dc.w -32
 
-ani_spr_cursor_eye:
-    dc.w 22
-    dc.l spr_cursor_eye
+;ani_spr_cursor_eye:
+;    dc.w 22
+;    dc.l spr_cursor_eye
+;    dc.w 8
+;    dc.w 3
+;    dc.l spr_cursor
+;    dc.w 8
+;    dc.w 10
+;    dc.l spr_empty
+;    dc.w 8
+;    dc.w 3
+;    dc.l spr_empty_eye
+;    dc.w 8
+;    dc.w 12
+;    dc.l spr_empty
+;    dc.w -32
+
+ani_spr_em:
+    dc.w 25
+    dc.l spr_em1
     dc.w 8
-    dc.w 3
-    dc.l spr_cursor
+    dc.w 15
+    dc.l spr_em2
     dc.w 8
     dc.w 10
-    dc.l spr_empty
-    dc.w 8
-    dc.w 3
-    dc.l spr_empty_eye
-    dc.w 8
-    dc.w 12
-    dc.l spr_empty
-    dc.w -32
+    dc.l spr_em3
+    dc.w -16
 
 raw_sprites:
 ; 0
@@ -3280,25 +2638,25 @@ raw_spr_qm1: ; question mark small 8x8
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_qm2: ; question mark 10x10
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $F83F,$07C0,$07C0,$0000,$0000
-    dc.w $F18F,$0E70,$0E70,$0000,$0000
-    dc.w $FF8F,$0670,$0070,$0000,$0000
-    dc.w $FF8F,$0070,$0070,$0000,$0000
-    dc.w $FF3F,$00C0,$00C0,$0000,$0000
-    dc.w $FE7F,$0180,$0180,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FE7F,$0180,$0180,$0000,$0000
-    dc.w $FE7F,$0180,$0180,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
+;raw_spr_qm2: ; question mark 10x10
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $F83F,$07C0,$07C0,$0000,$0000
+;    dc.w $F18F,$0E70,$0E70,$0000,$0000
+;    dc.w $FF8F,$0670,$0070,$0000,$0000
+;    dc.w $FF8F,$0070,$0070,$0000,$0000
+;    dc.w $FF3F,$00C0,$00C0,$0000,$0000
+;    dc.w $FE7F,$0180,$0180,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FE7F,$0180,$0180,$0000,$0000
+;    dc.w $FE7F,$0180,$0180,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_qm3: ; question mark 12x12
+raw_spr_qm2: ; question mark 12x12
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $F81F,$07E0,$07E0,$0000,$0000
@@ -3316,25 +2674,25 @@ raw_spr_qm3: ; question mark 12x12
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_qm4: ; question mark 14x14
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $F01F,$0FE0,$0FE0,$0000,$0000
-    dc.w $F01F,$0FE0,$0FE0,$0000,$0000
-    dc.w $E3C7,$1C38,$1C38,$0000,$0000
-    dc.w $FFC7,$0038,$0038,$0000,$0000
-    dc.w $FFC7,$0038,$0038,$0000,$0000
-    dc.w $FF1F,$00E0,$00E0,$0000,$0000
-    dc.w $FF1F,$00E0,$00E0,$0000,$0000
-    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
+;raw_spr_qm4: ; question mark 14x14
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $F01F,$0FE0,$0FE0,$0000,$0000
+;    dc.w $F01F,$0FE0,$0FE0,$0000,$0000
+;    dc.w $E3C7,$1C38,$1C38,$0000,$0000
+;    dc.w $FFC7,$0038,$0038,$0000,$0000
+;    dc.w $FFC7,$0038,$0038,$0000,$0000
+;    dc.w $FF1F,$00E0,$00E0,$0000,$0000
+;    dc.w $FF1F,$00E0,$00E0,$0000,$0000
+;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_qm5: ; question mark 16x16
+raw_spr_qm3: ; question mark 16x16
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $C3C3,$3C3C,$3C3C,$0000,$0000
@@ -3352,41 +2710,95 @@ raw_spr_qm5: ; question mark 16x16
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_cursor_legs1:
+raw_spr_em1: ; exclamation mark 8x8
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $FEFF,$0100,$0100,$0000,$0000
-    dc.w $FEFF,$0100,$0100,$0000,$0000
+    dc.w $FE7F,$0180,$0180,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FE7F,$0180,$0180,$0000,$0000
     dc.w $FE7F,$0180,$0180,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FE7F,$0180,$0180,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_cursor_legs2:
+raw_spr_em2: ; exclamation mark 12x12
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FC7F,$0380,$0380,$0000,$0000
+    dc.w $F81F,$07E0,$07E0,$0000,$0000
+    dc.w $F81F,$07E0,$07E0,$0000,$0000
+    dc.w $F81F,$07E0,$07E0,$0000,$0000
+    dc.w $FC7F,$0380,$0380,$0000,$0000
+    dc.w $FC7F,$0380,$0380,$0000,$0000
+    dc.w $FC7F,$0380,$0380,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FC7F,$0380,$0380,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
+
+raw_spr_em3: ; exclamation mark 16x16
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-    dc.w $FEBF,$0140,$0140,$0000,$0000
-    dc.w $FEBF,$0140,$0140,$0000,$0000
-    dc.w $FE1F,$01E0,$01E0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FC3F,$03C0,$03C0,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+    dc.w $FFFF,$0000,$0000,$0000,$0000
+
+;raw_spr_cursor_legs1:
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $FEFF,$0100,$0100,$0000,$0000
+;    dc.w $FEFF,$0100,$0100,$0000,$0000
+;    dc.w $FE7F,$0180,$0180,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+
+;raw_spr_cursor_legs2:
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
+;    dc.w $FEBF,$0140,$0140,$0000,$0000
+;    dc.w $FEBF,$0140,$0140,$0000,$0000
+;    dc.w $FE1F,$01E0,$01E0,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
 
 mouse_params:
     dc.b    0,1,1,1
@@ -3395,8 +2807,13 @@ pal_start: ; default palette. we start with a white bg, plane 1+2 are for the ba
     ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
     ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
     dc.w $0777 ; 0 %0000 bg
+    if DEBUG
+    dc.w $0500 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0700 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    else
     dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    endif
     if DEBUG
     dc.w $0700 ; 3 inital cursor color (black)
     else
@@ -3419,8 +2836,13 @@ pal_black: ; default palette. we start with a white bg, plane 1+2 are for the ba
     ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
     ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
     dc.w $0000 ; 0 %0000 bg
-    dc.w $0000 ; 1 initial border color (invisible, change to 777 later) (further out)
-    dc.w $0000 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    if DEBUG
+    dc.w $0700 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0700 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    else
+    dc.w $0302 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0302 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    endif
     if DEBUG
     dc.w $0700 ; 3 inital cursor color (black)
     else
@@ -4921,53 +4343,52 @@ scrollerpalgreen4w:
 vbicounter:
     dc.w 0
 
-keyclick: ; taken from emutos!
-    dc.b $3B,0 ; channel A pitch (0,1)
-    dc.b 0,0 ; no channel B (2,3)
-    dc.b 0,0 ; no channel C (4,5)
-    dc.b 0 ; no noise (6)
-    dc.b $FE ; only channel A (7)
-    dc.b 16 ; channel A amplitude (8)
-    dc.b 0 ; channel B amp (9)
-    dc.b 0 ; channel B amp (10)
-    dc.b $80 ; envelope (11)
-    dc.b 1 ; envelope (12)
-    dc.b 3 ; envelope (13)
+;keyclick: ; taken from emutos!
+;    dc.b $3B,0 ; channel A pitch (0,1)
+;    dc.b 0,0 ; no channel B (2,3)
+;    dc.b 0,0 ; no channel C (4,5)
+;    dc.b 0 ; no noise (6)
+;    dc.b $FE ; only channel A (7)
+;    dc.b 16 ; channel A amplitude (8)
+;    dc.b 0 ; channel B amp (9)
+;    dc.b 0 ; channel B amp (10)
+;    dc.b $80 ; envelope (11)
+;    dc.b 1 ; envelope (12)
+;    dc.b 3 ; envelope (13)
 
-    even
+;    even
 
-sndrs:
-    dc.b 0,0
-    dc.b 0,0
-    dc.b 0,0
-    dc.b 0
-    dc.b $FF
-    dc.b 0
-    dc.b 0
-    dc.b 0
-    dc.b 0
-    dc.b 0
-    dc.b 0
+;sndrs:
+;    dc.b 0,0
+;    dc.b 0,0
+;    dc.b 0,0
+;    dc.b 0
+;    dc.b $FF
+;    dc.b 0
+;    dc.b 0
+;    dc.b 0
+;    dc.b 0
+;    dc.b 0
+;    dc.b 0
 
-    even
+;    even
 
-nos:	DC.B	0,0,$3E,0
-	dc.b	1,0,1,0
-	DC.B	2,0,$EE,0
-	dc.b	3,0,0,0
-	DC.B	4,0,$59,0
-	dc.b	5,0,2,0
-	DC.B	6,0,7,0
-	dc.b	7,0,$F8,0
-vols:
-	DC.B	8,0
-vol1	dc.b	$E,0
-	DC.B	9,0
-vol2	dc.b	$E,0
-	DC.B	$A,0
-vol3	dc.b	$F,0
-
-    even
+;nos:	DC.B	0,0,$3E,0
+;	dc.b	1,0,1,0
+;	DC.B	2,0,$EE,0
+;	dc.b	3,0,0,0
+;	DC.B	4,0,$59,0
+;	dc.b	5,0,2,0
+;	DC.B	6,0,7,0
+;	dc.b	7,0,$F8,0
+;vols:
+;	DC.B	8,0
+;vol1	dc.b	$E,0
+;	DC.B	9,0
+;vol2	dc.b	$E,0
+;	DC.B	$A,0
+;vol3	dc.b	$F,0
+;    even
 
 scrolltext:
     include 'scrolltext.s'
@@ -4996,8 +4417,8 @@ spr_bgs:
 spr_bgs2:
     dc.l spr_bg3,spr_bg4
 
-play_sound:
-    dc.l 0
+;play_sound:
+;    dc.l 0
 
 ; dosound (XBIOS32) definition:
 ; $0x,<byte>: write <byte> to register x
@@ -5020,9 +4441,24 @@ snd_keyclick_dosound:
     dc.b $0b,$80 ; register 11 (envelope)
     dc.b $0c,$01 ; register 12
     dc.b $0d,$03 ; register 13
+    dc.b $ff,100 ; delay 2 secs
+    dc.b $00,$3B ; register 0 (chan 1)
+    dc.b $01,$00 ; register 1 (chan 1)
+    dc.b $02,$00 ; register 2 (chan 2)
+    dc.b $03,$00 ; register 3 (chan 2)
+    dc.b $04,$00 ; register 4 (chan 3)
+    dc.b $05,$00 ; register 5 (chan 3)
+    dc.b $06,$00 ; register 6 (noise)
+    dc.b $07,$FE ; register 7 (chan select)
+    dc.b $08,$10 ; register 8 (amplitude chan 1)
+    dc.b $09,$00 ; register 9 (amplitude chan 2)
+    dc.b $0a,$00 ; register 10 (amplitude chan 3)
+    dc.b $0b,$80 ; register 11 (envelope)
+    dc.b $0c,$01 ; register 12
+    dc.b $0d,$03 ; register 13
     dc.b $ff,$00 ; finish
 
-snd_keyclick_data:
+snd_keyclick2_dosound:
     dc.b $00,$3B ; register 0 (chan 1)
     dc.b $01,$00 ; register 1 (chan 1)
     dc.b $02,$00 ; register 2 (chan 2)
@@ -5037,24 +4473,11 @@ snd_keyclick_data:
     dc.b $0b,$80 ; register 11 (envelope)
     dc.b $0c,$01 ; register 12
     dc.b $0d,$03 ; register 13
+    dc.b $80,$3B ; set tmp reg to $3B
+    dc.b $81,0,$01,$41 ; register 0, increment -2, end $31
+    dc.b $ff,$00 ; done
 
-snd_keyclick_data2:
-    dc.b $00,$3B ; register 0 (chan 1)
-    dc.b $01,$00 ; register 1 (chan 1)
-    dc.b $02,$00 ; register 2 (chan 2)
-    dc.b $03,$00 ; register 3 (chan 2)
-    dc.b $04,$00 ; register 4 (chan 3)
-    dc.b $05,$00 ; register 5 (chan 3)
-    dc.b $06,$00 ; register 6 (noise)
-    dc.b $07,$FE ; register 7 (chan select)
-    dc.b $08,$10 ; register 8 (amplitude chan 1)
-    dc.b $09,$00 ; register 9 (amplitude chan 2)
-    dc.b $0a,$00 ; register 10 (amplitude chan 3)
-    dc.b $0b,$80 ; register 11 (envelope)
-    dc.b $0c,$01 ; register 12
-    dc.b $0d,$03 ; register 13
-
-snd_bell_data:
+snd_bell_dosound:
     dc.b 0,$34   ; /* channel A pitch */
     dc.b 1,0
     dc.b 2,0     ;  /* no channel B */
@@ -5069,6 +4492,212 @@ snd_bell_data:
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
+    dc.b $ff,$00
+
+snd_bell2_dosound:
+    dc.b 0,$34   ; /* channel A pitch */
+    dc.b 1,0
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $80,$34
+    dc.b $81,0,2,$48
+    dc.b $ff,$00
+
+snd_bellriff_dosound:
+    dc.b 0,60   ; /* channel A pitch C7*/
+    dc.b 1,0
+    dc.b 2,71     ;  /* no channel B A6 */
+    dc.b 3,0
+    dc.b 4,89     ;  /* no channel C F6 */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,$10
+    dc.b 10,$10
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,20
+    dc.b 0,60   ; /* channel A pitch C7*/
+    dc.b 1,0
+    dc.b 2,71     ;  /* no channel B A6 */
+    dc.b 3,0
+    dc.b 4,89     ;  /* no channel C F6 */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,$10
+    dc.b 10,$10
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,40
+    dc.b 0,60   ; /* channel A pitch C7*/
+    dc.b 1,0
+    dc.b 2,67     ;  /* no channel B A#6 */
+    dc.b 3,0
+    dc.b 4,89     ;  /* no channel C F6 */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,$10
+    dc.b 10,$10
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,20
+    dc.b 0,60   ; /* channel A pitch C7*/
+    dc.b 1,0
+    dc.b 2,67     ;  /* no channel B A#6 */
+    dc.b 3,0
+    dc.b 4,89     ;  /* no channel C F6 */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,$10
+    dc.b 10,$10
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,40
+    dc.b $ff,$00
+
+snd_bellriff2_dosound:
+    ; D7 - 460
+    ; F7 - 260
+    ; A#6 - 460
+    ; D7 - 260
+    ; F7 - 460
+    ; A#6 - 260
+    
+
+snd_tribell_dosound:
+    dc.b 0,146   ; /* channel A pitch */
+    dc.b 1,1
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,60
+    dc.b 0,164   ; /* channel A pitch */
+    dc.b 1,2
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,30
+    dc.b 0,195   ; /* channel A pitch */
+    dc.b 1,1
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,60
+    dc.b 0,146   ; /* channel A pitch */
+    dc.b 1,1
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,30
+    dc.b 0,164   ; /* channel A pitch */
+    dc.b 1,2
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,60
+    dc.b 0,195   ; /* channel A pitch */
+    dc.b 1,1
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,0     ;  /* no noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+    dc.b $ff,30
+    dc.b $ff,$00
+
+scrolleraddrtables:
+    dc.l scrolleraddrtable1,scrolleraddrtable2
+
+scrolleraddrtable1: ; contains: screen address, font address 1 / 2, offset 1 / 2
+    dc.l scrollscraddr1 ; address where the screen address is stored (beginning of scroller)
+    dc.l font ; font1
+    dc.l font ; font2
+    dc.w 0,0 ; offset of the scroll character (here: use the same character and the same font)
+    dc.w 2 ; value to add to the scrollerpos
+
+scrolleraddrtable2:
+    dc.l scrollscraddr2
+    dc.l font_shift_r
+    dc.l font_shift_l
+    dc.w 0,-2 ; offset of the scroll characters (here: use shift_r with the current character and shift_l with the previous character, those are ORed)
+    dc.w 0
+
+logo_data:
+    include 'logo_data.s'
+    ;include 'logo_rle.s'
 
     bss
 current_scrollerpal_sequence_struct:
@@ -5181,17 +4810,25 @@ spr_qm2:
 spr_qm3:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_qm4:
+;spr_qm4:
+;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+
+;spr_qm5:
+;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+spr_em1:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_qm5:
+spr_em2:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_cursor_legs1:
+spr_em3:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_cursor_legs2:
-    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+;spr_cursor_legs1:
+;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+
+;spr_cursor_legs2:
+;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
 spr_bg1:
     ds.l 1+4*16 ; start address + 4 planes * 16 lines
@@ -5219,7 +4856,8 @@ font_shift_r:
 font_shift_l:
     ds.l 2*2*64*32
 
-; the new screen address
+; the new screen address - theoretical resolution in pixels: (52 + 320 + 92) x (27 + 200 + bot_lines)
+; visible area starts left at pixel number 6, and ends at pixel number 415, so it is 410 pixels wide, so typically 410 x 259 (not counting the first crippled line)
 scrn:
     ds.b 256 ; byte boundary (word boundary (i.e. bit 0 = 0) in the msb!)
 s:
@@ -5236,7 +4874,7 @@ s:
 ; total screen length in bytes
 screen_len equ *-s
 
-; the new screen address
+; the new screen address 2
 scrn2:
     ds.b 256 ; byte boundary (word boundary (i.e. bit 0 = 0) in the msb!)
 s2:
@@ -5271,8 +4909,8 @@ hw_screen1: ; screen 1 address in format to slap into hw register with movep
 hw_screen2: ; screen 2 address in format to slap into hw register with movep
     ds.w 1
 
-spr_position_addr:
-    ds.l 1
+;spr_position_addr:
+;    ds.l 1
 scrollscraddr:
     ds.l 1
 scrollscraddrs:
