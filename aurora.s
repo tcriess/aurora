@@ -110,16 +110,37 @@ bot_lines       equ     32
 
     ; fill screen with logo
 
-    lea logo_data,a5
-    move.w #200-1,d0
+    lea logo_data,a5 ; only one quarter, so we fill the screen (logo size is 410 x 202) with 4 copies of a 205 x 101 image
+    move.w #101-1,d0
 .logoloop:
-    rept 26
+    rept 13
+    move.l (a5)+,(a6)+
+    move.l #0,(a6)+
+    endr
+    lea -13*4(a5),a5
+    rept 13
     move.l (a5)+,(a6)+
     move.l #0,(a6)+
     endr
     ; 26*2*4 bytes = 208 bytes, 22 bytes missing
     lea 22(a6),a6
     dbra d0,.logoloop
+
+    lea logo_data,a5
+    move.w #101-1,d0
+.logoloop2:
+    rept 13
+    move.l (a5)+,(a6)+
+    move.l #0,(a6)+
+    endr
+    lea -13*4(a5),a5
+    rept 13
+    move.l (a5)+,(a6)+
+    move.l #0,(a6)+
+    endr
+    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
+    lea 22(a6),a6
+    dbra d0,.logoloop2
 
     moveq #-1,d0
     ; new screen still in d1

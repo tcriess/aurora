@@ -9,7 +9,7 @@ import sys
 
 # the visisble area is about 410 x 260
 
-im = iio.imread('logo.png')
+im = iio.imread('logo4.png')
 # print(im.shape)
 
 # in order to create screen data, we need to set 230 bytes per line (4 words=8 bytes per 16 pixels)
@@ -24,6 +24,12 @@ im = np.roll(im, -1, axis=1)
 no_lines = im.shape[0]
 
 slices = np.split(im, 26, axis=1)
+
+# 26 slices of 16x202
+#
+# test: only store one quarter
+slices = slices[:13]
+no_lines = no_lines // 2
 
 print('; GENERATED CODE, DO NOT EDIT')
 
@@ -52,14 +58,14 @@ for lno in range(no_lines):
         #l[8:12] = 0 if np.sum(l[8:12]) < 2 else 1
         #l[12:16] = 0 if np.sum(l[12:16]) < 2 else 1
 
-        if lno < 168:
-            l[0:8] = 0 if np.sum(l[0:8]) < 2 else 1
-            l[8:16] = 0 if np.sum(l[8:16]) < 2 else 1
-        else:  # lower part = text
-            l[0:4] = 0 if np.sum(l[0:4]) < 1 else 1
-            l[4:8] = 0 if np.sum(l[4:8]) < 1 else 1
-            l[8:12] = 0 if np.sum(l[8:12]) < 1 else 1
-            l[12:16] = 0 if np.sum(l[12:16]) < 1 else 1
+        #if lno < 168:
+        #    l[0:8] = 0 if np.sum(l[0:8]) < 2 else 1
+        #    l[8:16] = 0 if np.sum(l[8:16]) < 2 else 1
+        #else:  # lower part = text
+        #    l[0:4] = 0 if np.sum(l[0:4]) < 1 else 1
+        #    l[4:8] = 0 if np.sum(l[4:8]) < 1 else 1
+        #    l[8:12] = 0 if np.sum(l[8:12]) < 1 else 1
+        #    l[12:16] = 0 if np.sum(l[12:16]) < 1 else 1
 
         # print(l)
         b = BitArray(l).uint
