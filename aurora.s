@@ -110,7 +110,9 @@ bot_lines       equ     32
 
     ; fill screen with logo
 
-    lea logo_data,a5 ; only one quarter, so we fill the screen (logo size is 410 x 202) with 4 copies of a 205 x 101 image
+    ; only show 1 logo in the middle
+    lea 230*51(a6),a6
+    lea logo_data,a5
     move.w #101-1,d0
 .logoloop:
     rept 13
@@ -118,29 +120,47 @@ bot_lines       equ     32
     move.l #0,(a6)+
     endr
     lea -13*4(a5),a5
+    addq #2,a6
     rept 13
     move.l (a5)+,(a6)+
     move.l #0,(a6)+
     endr
-    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
-    lea 22(a6),a6
+    ;lea 22+13*2*4(a6),a6
+    lea 20(a6),a6
     dbra d0,.logoloop
 
-    lea logo_data,a5
-    move.w #101-1,d0
-.logoloop2:
-    rept 13
-    move.l (a5)+,(a6)+
-    move.l #0,(a6)+
-    endr
-    lea -13*4(a5),a5
-    rept 13
-    move.l (a5)+,(a6)+
-    move.l #0,(a6)+
-    endr
-    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
-    lea 22(a6),a6
-    dbra d0,.logoloop2
+
+;    lea logo_data,a5 ; only one quarter, so we fill the screen (logo size is 410 x 202) with 4 copies of a 205 x 101 image
+;    move.w #101-1,d0
+;.logoloop:
+;    rept 13
+;    move.l (a5)+,(a6)+
+;    move.l #0,(a6)+
+;    endr
+;    lea -13*4(a5),a5
+;    rept 13
+;    move.l (a5)+,(a6)+
+;    move.l #0,(a6)+
+;    endr
+;    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
+;    lea 22(a6),a6
+;    dbra d0,.logoloop
+
+;    lea logo_data,a5
+;    move.w #101-1,d0
+;.logoloop2:
+;    rept 13
+;    move.l (a5)+,(a6)+
+;    move.l #0,(a6)+
+;    endr
+;    lea -13*4(a5),a5
+;    rept 13
+;    move.l (a5)+,(a6)+
+;    move.l #0,(a6)+
+;    endr
+;    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
+;    lea 22(a6),a6
+;    dbra d0,.logoloop2
 
     moveq #-1,d0
     ; new screen still in d1
@@ -171,9 +191,9 @@ bot_lines       equ     32
     lea raw_spr_empty,a0
     lea spr_empty,a1
     jsr prepare_sprite
-    lea raw_spr_empty_eye,a0
-    lea spr_empty_eye,a1
-    jsr prepare_sprite
+    ;lea raw_spr_empty_eye,a0
+    ;lea spr_empty_eye,a1
+    ;jsr prepare_sprite
     ;lea raw_spr_cursor_legs1,a0
     ;lea spr_cursor_legs1,a1
     ;jsr prepare_sprite
@@ -1466,7 +1486,7 @@ my_70:
     lea current_dosound_sequence_struct,a1
     ; counter in 0(a1)
     move.w 0(a1),d0
-    subq #1,d0
+    subq.w #1,d0
     bgt .dosndexit2 ; counter still > 0, continue in the next vbi
 
     ; counter <=0 - continue here
@@ -1512,7 +1532,7 @@ my_70:
     move.b 6(a1),$ffff8802 ; value to chip
     cmp.b 6(a1),d5
     beq.s .dosndexit ; end value reached, store the new current entry
-    subq.l #4,a5 ; pointer back to the same command
+    subq.w #4,a5 ; pointer back to the same command
     bra.s .dosndexit ; the next iteration of the loop will happen in the next vbi, keep everything as is
 
 .dosndsettimer:
@@ -2231,29 +2251,12 @@ pal_sequence:
     dc.w 0 ; offset to the next entry
 
 snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
-    dc.w 200
-    dc.l snd_keyclick_dosound
-    dc.w 8
-
-    dc.w 300
-    dc.l snd_keyclick2_dosound
-    dc.w 8
-
-    dc.w 300
-    dc.l snd_bell_dosound
-    dc.w 8
-
-    dc.w 120
-    dc.l snd_bellriff_dosound
     dc.w 0
-
-    ;dc.w 300
-    ;dc.l snd_bell2_dosound
-    ;dc.w -24
-
-
-
-
+    dc.l snd_bluesline_dosound
+    dc.w 8    
+    dc.w 600
+    dc.l snd_bluesline_dosound
+    dc.w 0    
 
 spr_sequence:
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
@@ -2499,20 +2502,6 @@ ani_spr_cursor:
     endif
     dc.w -8 ; affset to the next entry (go backwards)
 
-;ani_spr_cursor_legs:
-;    dc.w 25 ; delay
-;    dc.l spr_cursor_legs1 ; sprite data
-;    dc.w 8 ; offset to the next entry
-;    dc.w 25
-;    dc.l spr_empty ; sprite data
-;    dc.w 8 ; affset to the next entry (go backwards)
-;    dc.w 25 ; delay
-;    dc.l spr_cursor_legs2 ; sprite data
-;    dc.w 8 ; offset to the next entry
-;    dc.w 25
-;    dc.l spr_empty ; sprite data
-;    dc.w -24 ; affset to the next entry (go backwards)
-
 ani_spr_qm:
     dc.w 25
     dc.l spr_qm1
@@ -2523,29 +2512,6 @@ ani_spr_qm:
     dc.w 10
     dc.l spr_qm3
     dc.w -16
-    ;dc.w 5
-    ;dc.l spr_qm4
-    ;dc.w 8
-    ;dc.w 5
-    ;dc.l spr_qm5
-    ;dc.w -32
-
-;ani_spr_cursor_eye:
-;    dc.w 22
-;    dc.l spr_cursor_eye
-;    dc.w 8
-;    dc.w 3
-;    dc.l spr_cursor
-;    dc.w 8
-;    dc.w 10
-;    dc.l spr_empty
-;    dc.w 8
-;    dc.w 3
-;    dc.l spr_empty_eye
-;    dc.w 8
-;    dc.w 12
-;    dc.l spr_empty
-;    dc.w -32
 
 ani_spr_em:
     dc.w 25
@@ -2578,23 +2544,23 @@ raw_spr_empty:
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
 
-raw_spr_empty_eye:
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FF9F,$0060,$0060,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
-    dc.w $FFFF,$0000,$0000,$0000,$0000
+;raw_spr_empty_eye:
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FF9F,$0060,$0060,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
+;    dc.w $FFFF,$0000,$0000,$0000,$0000
 
 ; 1
 raw_spr_cursor:
@@ -4462,41 +4428,7 @@ snd_keyclick_dosound:
     dc.b $0b,$80 ; register 11 (envelope)
     dc.b $0c,$01 ; register 12
     dc.b $0d,$03 ; register 13
-    dc.b $ff,100 ; delay 2 secs
-    dc.b $00,$3B ; register 0 (chan 1)
-    dc.b $01,$00 ; register 1 (chan 1)
-    dc.b $02,$00 ; register 2 (chan 2)
-    dc.b $03,$00 ; register 3 (chan 2)
-    dc.b $04,$00 ; register 4 (chan 3)
-    dc.b $05,$00 ; register 5 (chan 3)
-    dc.b $06,$00 ; register 6 (noise)
-    dc.b $07,$FE ; register 7 (chan select)
-    dc.b $08,$10 ; register 8 (amplitude chan 1)
-    dc.b $09,$00 ; register 9 (amplitude chan 2)
-    dc.b $0a,$00 ; register 10 (amplitude chan 3)
-    dc.b $0b,$80 ; register 11 (envelope)
-    dc.b $0c,$01 ; register 12
-    dc.b $0d,$03 ; register 13
     dc.b $ff,$00 ; finish
-
-snd_keyclick2_dosound:
-    dc.b $00,$3B ; register 0 (chan 1)
-    dc.b $01,$00 ; register 1 (chan 1)
-    dc.b $02,$00 ; register 2 (chan 2)
-    dc.b $03,$00 ; register 3 (chan 2)
-    dc.b $04,$00 ; register 4 (chan 3)
-    dc.b $05,$00 ; register 5 (chan 3)
-    dc.b $06,$00 ; register 6 (noise)
-    dc.b $07,$FE ; register 7 (chan select)
-    dc.b $08,$10 ; register 8 (amplitude chan 1)
-    dc.b $09,$00 ; register 9 (amplitude chan 2)
-    dc.b $0a,$00 ; register 10 (amplitude chan 3)
-    dc.b $0b,$80 ; register 11 (envelope)
-    dc.b $0c,$01 ; register 12
-    dc.b $0d,$03 ; register 13
-    dc.b $80,$3B ; set tmp reg to $3B
-    dc.b $81,0,$01,$41 ; register 0, increment -2, end $31
-    dc.b $ff,$00 ; done
 
 snd_bell_dosound:
     dc.b 0,$34   ; /* channel A pitch */
@@ -4515,189 +4447,287 @@ snd_bell_dosound:
     dc.b 13,9
     dc.b $ff,$00
 
-snd_bell2_dosound:
-    dc.b 0,$34   ; /* channel A pitch */
-    dc.b 1,0
+snd_bluesline_dosound:
+    dc.b 0,112   ; /* channel A pitch */
+    dc.b 1,4 ; 4 / 112 - A-2
     dc.b 2,0     ;  /* no channel B */
     dc.b 3,0
     dc.b 4,0     ;  /* no channel C */
     dc.b 5,0
     dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 7,$FC   ; /* no sound or noise except channel A + B */
     dc.b 8,$10  ;  /* channel A amplitude */
     dc.b 9,0
     dc.b 10,0
     dc.b 11,0    ;  /* envelope */
-    dc.b 12,16
+    dc.b 12,32
     dc.b 13,9
-    dc.b $80,$34
-    dc.b $81,0,2,$48
-    dc.b $ff,$00
+    dc.b $ff,25
 
-snd_bellriff_dosound:
-    dc.b 0,60   ; /* channel A pitch C7*/
-    dc.b 1,0
-    dc.b 2,71     ;  /* no channel B A6 */
-    dc.b 3,0
-    dc.b 4,89     ;  /* no channel C F6 */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,$10
-    dc.b 10,$10
+    dc.b 2,123     ;  /*  channel B */
+    dc.b 3,1 ; E-4
+    dc.b 9,$10 ; volume B
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,20
-    dc.b 0,60   ; /* channel A pitch C7*/
-    dc.b 1,0
-    dc.b 2,71     ;  /* no channel B A6 */
-    dc.b 3,0
-    dc.b 4,89     ;  /* no channel C F6 */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,$10
-    dc.b 10,$10
-    dc.b 11,0    ;  /* envelope */
-    dc.b 12,16
-    dc.b 13,9
-    dc.b $ff,40
-    dc.b 0,60   ; /* channel A pitch C7*/
-    dc.b 1,0
-    dc.b 2,67     ;  /* no channel B A#6 */
-    dc.b 3,0
-    dc.b 4,89     ;  /* no channel C F6 */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,$10
-    dc.b 10,$10
-    dc.b 11,0    ;  /* envelope */
-    dc.b 12,16
-    dc.b 13,9
-    dc.b $ff,20
-    dc.b 0,60   ; /* channel A pitch C7*/
-    dc.b 1,0
-    dc.b 2,67     ;  /* no channel B A#6 */
-    dc.b 3,0
-    dc.b 4,89     ;  /* no channel C F6 */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$F8   ; /* no sound or noise except channel A-C */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,$10
-    dc.b 10,$10
-    dc.b 11,0    ;  /* envelope */
-    dc.b 12,16
-    dc.b 13,9
-    dc.b $ff,40
-    dc.b $ff,$00
 
-snd_bellriff2_dosound:
-    ; D7 - 460
-    ; F7 - 260
-    ; A#6 - 460
-    ; D7 - 260
-    ; F7 - 460
-    ; A#6 - 260
-    
+    dc.b $ff,25
+    dc.b 0,252   ; /* channel A pitch */
+    dc.b 1,4     ; 4 / 252 - G-2
 
-snd_tribell_dosound:
-    dc.b 0,146   ; /* channel A pitch */
-    dc.b 1,1
-    dc.b 2,0     ;  /* no channel B */
-    dc.b 3,0
-    dc.b 4,0     ;  /* no channel C */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,0
-    dc.b 10,0
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,50
+
+    dc.b 0,157   ; /* channel A pitch */
+    dc.b 1,5     ; 5 / 157 - F-2
+
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,50
+
+    dc.b 0,244   ; /* channel A pitch */
+    dc.b 1,5     ; 5 / 244 - E-2
+    dc.b 2,146     ;  /* channel B */
+    dc.b 3,1 ; D#-4
+
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+
+    dc.b 2,169     ;  /*  channel B */
+    dc.b 3,1 ; D-4
+    ; dc.b 9,$17 ; volume B
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,60
-    dc.b 0,164   ; /* channel A pitch */
-    dc.b 1,2
-    dc.b 2,0     ;  /* no channel B */
-    dc.b 3,0
-    dc.b 4,0     ;  /* no channel C */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,0
-    dc.b 10,0
+
+    dc.b $ff,25
+
+    ; 2nd round
+    dc.b 0,112   ; /* channel A pitch */
+    dc.b 1,4 ; 4 / 112 - A-2
+    dc.b 2,142     ;  /* no channel B */
+    dc.b 3,0  ; A-5
+;    
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+;
+    dc.b 2,159     ;  /*  channel B */
+    dc.b 3,0 ; G-5
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,30
-    dc.b 0,195   ; /* channel A pitch */
-    dc.b 1,1
-    dc.b 2,0     ;  /* no channel B */
-    dc.b 3,0
-    dc.b 4,0     ;  /* no channel C */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,0
-    dc.b 10,0
+    dc.b $ff,25
+;
+    dc.b 0,252   ; /* channel A pitch */
+    dc.b 1,4     ; 4 / 252 - G-2
+    dc.b 2,239     ;  /*  channel B */
+    dc.b 3,0 ; C-5
+;
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+;
+    dc.b 2,213     ;  /*  channel B */
+    dc.b 3,0 ; D-5
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,60
-    dc.b 0,146   ; /* channel A pitch */
-    dc.b 1,1
-    dc.b 2,0     ;  /* no channel B */
-    dc.b 3,0
-    dc.b 4,0     ;  /* no channel C */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,0
-    dc.b 10,0
+    dc.b $ff,25
+;
+    dc.b 0,157   ; /* channel A pitch */
+    dc.b 1,5     ; 5 / 157 - F-2
+;
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,50
+;
+    dc.b 0,244   ; /* channel A pitch */
+    dc.b 1,5     ; 5 / 244 - E-2
+    dc.b 2,146     ;  /* channel B */
+    dc.b 3,1 ; D#-4
+
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+
+    dc.b 2,169     ;  /*  channel B */
+    dc.b 3,1 ; D-4
+    dc.b 9,$10 ; colume B
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,30
-    dc.b 0,164   ; /* channel A pitch */
-    dc.b 1,2
-    dc.b 2,0     ;  /* no channel B */
-    dc.b 3,0
-    dc.b 4,0     ;  /* no channel C */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,0
-    dc.b 10,0
+
+    dc.b $ff,25
+
+    ; 3rd round
+    dc.b 0,112   ; /* channel A pitch */
+    dc.b 1,4 ; 4 / 112 - A-2
+    dc.b 2,28     ;  /* channel B */
+    dc.b 3,1  ; A-4
+;    
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+;
+    dc.b 2,239     ;  /*  channel B */
+    dc.b 3,0 ; C-5
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,60
-    dc.b 0,195   ; /* channel A pitch */
-    dc.b 1,1
-    dc.b 2,0     ;  /* no channel B */
-    dc.b 3,0
-    dc.b 4,0     ;  /* no channel C */
-    dc.b 5,0
-    dc.b 6,0     ;  /* no noise */
-    dc.b 7,$FE   ; /* no sound or noise except channel A */
-    dc.b 8,$10  ;  /* channel A amplitude */
-    dc.b 9,0
-    dc.b 10,0
+    dc.b $ff,25
+;
+    dc.b 0,252   ; /* channel A pitch */
+    dc.b 1,4     ; 4 / 252 - G-2
+    dc.b 2,201     ;  /*  channel B */
+    dc.b 3,0 ; D#-5
+;
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+;
+    dc.b 2,71     ;  /*  channel B */
+    dc.b 3,0 ; A-6
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
-    dc.b $ff,30
-    dc.b $ff,$00
+    dc.b $ff,25
+;
+    dc.b 0,157   ; /* channel A pitch */
+    dc.b 1,5     ; 5 / 157 - F-2
+    dc.b 2,80     ;  /*  channel B */
+    dc.b 3,0 ; G-6
+;
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,50
+;
+    dc.b 0,244   ; /* channel A pitch */
+    dc.b 1,5     ; 5 / 244 - E-2
+    dc.b 2,146     ;  /* channel B */
+    dc.b 3,1 ; D#-4
+
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,32
+    dc.b 13,9
+    dc.b $ff,25
+
+    dc.b 2,169     ;  /*  channel B */
+    dc.b 3,1 ; D-4
+    dc.b 9,$10 ; colume B
+    dc.b 11,0    ;  /* envelope */
+    dc.b 12,16
+    dc.b 13,9
+
+    dc.b $ff,25
+
+    dc.b $ff,0
+
+
+;snd_tribell_dosound:
+;    dc.b 0,146   ; /* channel A pitch */
+;    dc.b 1,1
+;    dc.b 2,0     ;  /* no channel B */
+;    dc.b 3,0
+;    dc.b 4,0     ;  /* no channel C */
+;    dc.b 5,0
+;    dc.b 6,0     ;  /* no noise */
+;    dc.b 7,$FE   ; /* no sound or noise except channel A */
+;    dc.b 8,$10  ;  /* channel A amplitude */
+;    dc.b 9,0
+;    dc.b 10,0
+;    dc.b 11,0    ;  /* envelope */
+;    dc.b 12,16
+;    dc.b 13,9
+;    dc.b $ff,60
+;    dc.b 0,164   ; /* channel A pitch */
+;    dc.b 1,2
+;    dc.b 2,0     ;  /* no channel B */
+;    dc.b 3,0
+;    dc.b 4,0     ;  /* no channel C */
+;    dc.b 5,0
+;    dc.b 6,0     ;  /* no noise */
+;    dc.b 7,$FE   ; /* no sound or noise except channel A */
+;    dc.b 8,$10  ;  /* channel A amplitude */
+;    dc.b 9,0
+;    dc.b 10,0
+;    dc.b 11,0    ;  /* envelope */
+;    dc.b 12,16
+;    dc.b 13,9
+;    dc.b $ff,30
+;    dc.b 0,195   ; /* channel A pitch */
+;    dc.b 1,1
+;    dc.b 2,0     ;  /* no channel B */
+;    dc.b 3,0
+;    dc.b 4,0     ;  /* no channel C */
+;    dc.b 5,0
+;    dc.b 6,0     ;  /* no noise */
+;    dc.b 7,$FE   ; /* no sound or noise except channel A */
+;    dc.b 8,$10  ;  /* channel A amplitude */
+;    dc.b 9,0
+;    dc.b 10,0
+;    dc.b 11,0    ;  /* envelope */
+;    dc.b 12,16
+;    dc.b 13,9
+;    dc.b $ff,60
+;    dc.b 0,146   ; /* channel A pitch */
+;    dc.b 1,1
+;    dc.b 2,0     ;  /* no channel B */
+;    dc.b 3,0
+;    dc.b 4,0     ;  /* no channel C */
+;    dc.b 5,0
+;    dc.b 6,0     ;  /* no noise */
+;    dc.b 7,$FE   ; /* no sound or noise except channel A */
+;    dc.b 8,$10  ;  /* channel A amplitude */
+;    dc.b 9,0
+;    dc.b 10,0
+;    dc.b 11,0    ;  /* envelope */
+;    dc.b 12,16
+;    dc.b 13,9
+;    dc.b $ff,30
+;    dc.b 0,164   ; /* channel A pitch */
+;    dc.b 1,2
+;    dc.b 2,0     ;  /* no channel B */
+;    dc.b 3,0
+;    dc.b 4,0     ;  /* no channel C */
+;    dc.b 5,0
+;    dc.b 6,0     ;  /* no noise */
+;    dc.b 7,$FE   ; /* no sound or noise except channel A */
+;    dc.b 8,$10  ;  /* channel A amplitude */
+;    dc.b 9,0
+;    dc.b 10,0
+;    dc.b 11,0    ;  /* envelope */
+;    dc.b 12,16
+;    dc.b 13,9
+;    dc.b $ff,60
+;    dc.b 0,195   ; /* channel A pitch */
+;    dc.b 1,1
+;    dc.b 2,0     ;  /* no channel B */
+;    dc.b 3,0
+;    dc.b 4,0     ;  /* no channel C */
+;    dc.b 5,0
+;    dc.b 6,0     ;  /* no noise */
+;    dc.b 7,$FE   ; /* no sound or noise except channel A */
+;    dc.b 8,$10  ;  /* channel A amplitude */
+;    dc.b 9,0
+;    dc.b 10,0
+;    dc.b 11,0    ;  /* envelope */
+;    dc.b 12,16
+;    dc.b 13,9
+;    dc.b $ff,30
+;    dc.b $ff,$00
 
 scrolleraddrtables:
     dc.l scrolleraddrtable1,scrolleraddrtable2
@@ -4813,14 +4843,14 @@ curr_blink:
 spr_cursor:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_cursor_eye:
-    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+;spr_cursor_eye:
+;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
 spr_empty:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-spr_empty_eye:
-    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
+;spr_empty_eye:
+;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
 spr_qm1:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
