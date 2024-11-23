@@ -240,31 +240,31 @@ bot_lines       equ     32
 
 * initialise sound chip
     ;bra end_init_mus 
-	move.w	#$8800,a0
+;   move.w	#$8800,a0
 
-	move.l	#init_mus,a2
+;	move.l	#init_mus,a2
 
-do_init_mus:
-	move.w	(a2)+,d0
-	bmi.s	end_init_mus
+;do_init_mus:
+;	move.w	(a2)+,d0
+;	bmi.s	end_init_mus
 
-	movep.w	d0,0(a0)
-	bra.s	do_init_mus
+;	movep.w	d0,0(a0)
+;	bra.s	do_init_mus
 
-init_mus:
-	dc.w	$0000
-	dc.w	$0100
-	dc.w	$0200
-	dc.w	$0300
-	dc.w	$0400
-	dc.w	$0500
-	dc.w	$0600
-	dc.b	$07,%01111111
-	dc.w	$0d00
+;init_mus:
+;	dc.w	$0000
+;	dc.w	$0100
+;	dc.w	$0200
+;	dc.w	$0300
+;	dc.w	$0400
+;	dc.w	$0500
+;	dc.w	$0600
+;	dc.b	$07,%01111111
+;	dc.w	$0d00
+;
+;	dc.w	-1
 
-	dc.w	-1
-
-end_init_mus:
+;end_init_mus:
 
 snd_keyclick macro
     lea.l keyclick,a6   ; 12
@@ -868,7 +868,7 @@ my_70:
     ; - 6w: offset to next entry
     
     move.w (a3),d2 ; counter
-    move.l 2(a3),a5 ; current palette table addr
+    ;move.l 2(a3),a5 ; current palette table addr
     subq #1,d2
     bge.s .current_scrpal_seq_cnt_ok
     ; things to do when the current scrollerpal sequence counter is <0 (i.e. jump to the next entry in the sequence)
@@ -877,14 +877,21 @@ my_70:
     move.w 6(a4),d3 ; 6(a4).w: offset to the next entry to avoid branching (can be negative or 0)
     move.w (a4),d2 ; new counter
 
-    move.l 2(a4),2(a3) ; next current scrollerpal table
+    ;lea scrollerpals,a5
+    nop
+    move.l 2(a4),d5
+    add.l d5,2(a3)
+    ;add.w 2(a4),a5
+    ;move.l a5,2(a3)
+    ;add.l #4,2(a3)
+    ;move.l 2(a4),2(a3) ; next current scrollerpal table
     add.w d3,a4 ; next entry in the sequence
     move.l a4,6(a3)
     ;/INNER CODE 1
     bra.s .current_scrpal_seq_cont
 .current_scrpal_seq_cnt_ok:
     ; nops for INNER CODE 1
-    dcb.w 22,$4e71 ; 88c
+    dcb.w 26,$4e71 ; 88c
 
     ; following two nops to even out the cycles of the bge/bra construct
     nop
@@ -1998,7 +2005,10 @@ init_sprite:
     lea current_scrollerpal_sequence_struct,a0
     lea scrollerpal_sequence,a1
     move.w (a1),(a0) ; delay
-    move.l 2(a1),2(a0)
+    lea scrollerpals,a2
+    ;add.w 2(a1),a2
+    move.l a2,2(a0)
+    ;;move.l 2(a1),2(a0)
     add.w 6(a1),a1
     move.l a1,6(a0)
 
@@ -2949,589 +2959,117 @@ pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the 
     ; incbin 'spr_pal.dat'
 
 scrollerpal_sequence:
-    dc.w 1600
-    dc.l scrollerpals_start
+    dc.w 100 ;1600
+    ;dc.w 0 ; offset
+    dc.l 0 ; increment
     dc.w 8
-    dc.w 2 ; 0w: delay <- repeat enters here
-    dc.l scrollerpalsw ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+4 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+8 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+12 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+16 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+20 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+24 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+28 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+32 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+36 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+40 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+44 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+48 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+52 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+56 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+60 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+64 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+68 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+72 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+76 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+80 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+84 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+88 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+92 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+96 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+100 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+104 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+108 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+112 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+116 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+120 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+124 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+124 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+120 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+116 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+112 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+108 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+104 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+100 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+96 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+92 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+88 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+84 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+80 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+76 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+72 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+68 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+64 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+60 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+56 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+52 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+48 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+44 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+40 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+36 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+32 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+28 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+24 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+20 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+16 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+12 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+8 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+4 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
 
     dc.w 2 ; 0w: delay <- repeat enters here
-    dc.l scrollerpalsw ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+4 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+8 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+12 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+16 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+20 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+24 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+28 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+32 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+36 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+40 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+44 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+48 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+52 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+56 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+60 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+64 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+68 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+72 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+76 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+80 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+84 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+88 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+92 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+96 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+100 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+104 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+108 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+112 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+116 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+120 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+124 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+124 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+120 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+116 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+112 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+108 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+104 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+100 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+96 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+92 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+88 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+84 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+80 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+76 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+72 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+68 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+64 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+60 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+56 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+52 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+48 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+44 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+40 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+36 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+32 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+28 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+24 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+20 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+16 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+12 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+8 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw+4 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpalsw ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 64*4 ; increment -> 64. entry, start of the red palette
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
 
     dc.w 2 ; 0w: delay <- repeat enters here
-    dc.l scrollerpals ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+4)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+4 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+8)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+8 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+12)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+12 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+16)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+16 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+20)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+20 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+24)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+24 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+28)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+28 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+32)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+32 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+36)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+36 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+40)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+40 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+44)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+44 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+48)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+48 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+52)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+52 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+56)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+56 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+60)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+60 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+64)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+64 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+68)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+68 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+72)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+72 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+76)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+76 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+80)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+80 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+84)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+84 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+88)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+88 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+92)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+92 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+96)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+96 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+16)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+100 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+100)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+104 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+104)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+108 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+108)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+112 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+112)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+116 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+116)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+120 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+120)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+124 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 4 ; increment (+124)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
-    dc.l scrollerpals+124 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+120 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+116 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+112 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+108 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+104 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+100 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+96 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+92 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+88 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+84 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+80 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+76 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+72 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+68 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+64 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+60 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+56 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+52 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+48 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+44 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+40 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+36 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+32 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+28 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+24 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+20 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+16 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+12 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+8 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals+4 ; 2l: address of 64 palette addresses
-    dc.w 8 ; 6w: offset to the next entry (0: repeat forever)
-    dc.w 2 ; 0w: delay
-    dc.l scrollerpals ; 2l: address of 64 palette addresses
-    dc.w -496 ; 6w: offset to the next entry (0: repeat forever)
+    dc.l 0 ; increment (+124)
+    dc.w 0 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
 
 scrollerpals_start: ; constant 64 palettes, same as the upper half of the screen
+scrollerpals: ; offset 0
     dc.l pal_start
     dc.l pal_start
     dc.l pal_start
@@ -3598,7 +3136,7 @@ scrollerpals_start: ; constant 64 palettes, same as the upper half of the screen
     dc.l pal_start
 
 
-scrollerpals: ; 64 palettes
+scrollerpals_2: ; 64 palettes
     dc.l scrollerpalred1
     dc.l scrollerpalred1
     dc.l scrollerpalred1
