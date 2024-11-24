@@ -1950,34 +1950,64 @@ init_sprite:
     add.w 6(a2),a2 ; 6(a2) is the offset in the animated sprite definition to the next sprite (can be negative to point to the beginning or so)
     move.l a2,10(a1)
 
-    ; initially save the sprite background
-    move.l screen,a0
+    ; initially save the sprite background (make it empty, this is to save a few bytes code instead of really storing the bg)
     lea spr_bg1,a1
     lea spr_bg2,a2
-    move.l screen1,(a1)+
+    move.l screen1,(a1)+ ; upper left border, we don't care
     move.l screen2,(a2)+
     rept 16
-    movem.l (a0),d0-d3
-    movem.l d0-d3,(a1)
-    movem.l d0-d3,(a2)
-    lea 16(a1),a1
-    lea 16(a2),a2
-    lea 230(a0),a0
+    move.l #0,(a1)+
+    move.l #0,(a1)+
+    move.l #0,(a1)+
+    move.l #0,(a1)+
+    move.l #0,(a2)+
+    move.l #0,(a2)+
+    move.l #0,(a2)+
+    move.l #0,(a2)+
     endr
 
-    move.l screen,a0
+    ;move.l screen,a0
+    ;lea spr_bg1,a1
+    ;lea spr_bg2,a2
+    ;move.l screen1,(a1)+
+    ;move.l screen2,(a2)+
+    ;rept 16
+    ;movem.l (a0),d0-d3
+    ;movem.l d0-d3,(a1)
+    ;movem.l d0-d3,(a2)
+    ;lea 16(a1),a1
+    ;lea 16(a2),a2
+    ;lea 230(a0),a0
+    ;endr
+
     lea spr_bg3,a1
     lea spr_bg4,a2
-    move.l screen1,(a1)+
+    move.l screen1,(a1)+ ; upper left border, we don't care
     move.l screen2,(a2)+
     rept 16
-    movem.l (a0),d0-d3
-    movem.l d0-d3,(a1)
-    movem.l d0-d3,(a2)
-    lea 16(a1),a1
-    lea 16(a2),a2
-    lea 230(a0),a0
+    move.l #0,(a1)+
+    move.l #0,(a1)+
+    move.l #0,(a1)+
+    move.l #0,(a1)+
+    move.l #0,(a2)+
+    move.l #0,(a2)+
+    move.l #0,(a2)+
+    move.l #0,(a2)+
     endr
+
+    ;move.l screen,a0
+    ;lea spr_bg3,a1
+    ;lea spr_bg4,a2
+    ;move.l screen1,(a1)+
+    ;move.l screen2,(a2)+
+    ;rept 16
+    ;movem.l (a0),d0-d3
+    ;movem.l d0-d3,(a1)
+    ;movem.l d0-d3,(a2)
+    ;lea 16(a1),a1
+    ;lea 16(a2),a2
+    ;lea 230(a0),a0
+    ;endr
 
     ; init also the current pal and the current snd
     lea current_pal_sequence_struct,a0
@@ -2241,243 +2271,474 @@ pick_sysfont_chars:
     dc.b $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$2e,$2d,$21,$0e,$0f ; P,Q,...,Z,.,-,!,[atarileft],[atariright]
 
 pal_sequence:
-    dc.w 1000 ; delay
+    dc.w 625 ; delay
     dc.l pal_start ; address of the new palette
     dc.w 8 ; offset to the next entry
-    dc.w 25
+    dc.w 5
     dc.l pal_border1 ; address of the new palette
     dc.w 8 ; offset to the next entry
     dc.w 5
     dc.l pal_border2 ; address of the new palette
     dc.w 8 ; offset to the next entry
-    dc.w 5
-    dc.l pal_border3 ; address of the new palette
+    dc.w 180 ; delay
+    dc.l pal_start ; address of the new palette
     dc.w 8 ; offset to the next entry
     dc.w 5
-    dc.l pal_border4 ; address of the new palette
+    dc.l pal_border1 ; address of the new palette
+    dc.w 8 ; offset to the next entry
+    dc.w 5
+    dc.l pal_border2 ; address of the new palette
+    dc.w 8 ; offset to the next entry
+    dc.w 100 ; delay
+    dc.l pal_start ; address of the new palette
     dc.w 8 ; offset to the next entry
     dc.w 1000 ; delay
     dc.l pal_black ; address of the new palette
     dc.w 0 ; offset to the next entry
 
 snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
-    dc.w 0
+    dc.w 50
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 25
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+
+    dc.w 50 ; going back
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 10
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_keyclick_dosound
+    dc.w 8
+
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+
+    dc.w 15
+    dc.l snd_bell_dosound
+    dc.w 8
+
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 5
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+    dc.w 2
+    dc.l snd_bell_dosound
+    dc.w 8
+
+    dc.w 2
+    dc.l snd_crash_dosound
+    dc.w 8
+
+    dc.w 50
     dc.l snd_bluesline_dosound
     dc.w 8    
     dc.w 600
     dc.l snd_bluesline_dosound
     dc.w 0    
 
+    ; the sprite sequence - sprite 1
+    ; 2s start position, then moving a few steps to the right at increasing speed
 spr_sequence:
     dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l ani_spr_cursor ; 2l: animated sprite definition
     dc.w 230*(28-4)+24 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ;ani_spr_cursor_eye ; 2l: animated sprite definition
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+24 ; 6w: screen address offset
-    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 105 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l 0 ;ani_spr_cursor_eye ; 2l: animated sprite definition
-    dc.w 230*(28-4)+24 ; 6w: screen address offset
-    dc.w 0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l ani_spr_em ; 2l: animated sprite definition
-    dc.w 230*(28-4)+24 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l ani_spr_cursor ; 2l: animated sprite definition
-    dc.w 230*(28-4)+32 ; 6w: screen address offset
-    dc.w 0 ; 8w: sprite shift address offset
-    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+32 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+32 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+40 ; 6w: screen address offset
-    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+40 ; 6w: screen address offset
-    dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+48 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+48 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+56 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+56 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+64 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+64 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
     
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+72 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+72 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+80 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+80 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+88 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+88 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+96 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+96 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+104 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+104 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+112 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+112 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+120 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+120 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+128 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 25 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+128 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+136 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+136 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+144 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+144 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+152 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+152 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+160 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+160 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+168 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+168 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+176 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4)+176 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
@@ -2488,17 +2749,143 @@ spr_sequence:
     dc.l ani_spr_qm ; 2l: animated sprite definition
     dc.w 230*(28-4)+176 ; 6w: screen address offset
     dc.w sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+
+; going back
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor ; 2l: animated sprite definition
+    dc.w 230*(28-4)+176 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+176 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+168 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+168 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+168 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+160 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+160 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+152 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 10 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+152 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+152 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+160 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+160 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+168 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+168 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+176 ; 6w: screen address offset
+    dc.w 0*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 5 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4)+176 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-
-
 
 
 spr_sequence2:
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
-    dc.l ani_spr_cursor ; 2l: animated sprite definition
-    dc.w 230*(28-4+100)+196 ; 6w: screen address offset
+    dc.w 200 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_empty ; 2l: animated sprite definition
+    dc.w 230*(28-4+16)+196 ; 6w: screen address offset
     dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+
+    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_em ; 2l: animated sprite definition
+    dc.w 230*(28-4+16)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+
+    dc.w 50 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l ani_spr_cursor ; 2l: animated sprite definition
+    dc.w 230*(28-4+16)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+
+    dc.w 2 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4+14)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 2 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4+12)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 2 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4+10)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 2 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4+8)+196 ; 6w: screen address offset
+    dc.w 0 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 2 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4+8)+196 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 2 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.l 0 ; 2l: animated sprite definition
+    dc.w 230*(28-4+8)+196 ; 6w: screen address offset
+    dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    
+
 
 ani_spr_cursor:
     dc.w 25 ; delay
@@ -2533,6 +2920,11 @@ ani_spr_em:
     dc.w 10
     dc.l spr_em3
     dc.w -16
+
+ani_spr_empty:
+    dc.w 10
+    dc.l spr_empty
+    dc.w 0
 
 raw_sprites:
 ; 0
@@ -2863,7 +3255,7 @@ pal_border1: ; default palette. we start with a white bg, plane 1+2 are for the 
     ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
     dc.w $0777 ; 0 %0000 bg
     dc.w $0501 ; 1 initial border color (invisible, change to 777 later) (further out)
-    dc.w $0301 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    dc.w $0777 ; $0301 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
     if DEBUG
     dc.w $0700 ; 3 inital cursor color (black)
     else
@@ -2886,7 +3278,7 @@ pal_border2: ; default palette. we start with a white bg, plane 1+2 are for the 
     ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
     ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
     dc.w $0777 ; 0 %0000 bg
-    dc.w $0601 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0777 ; $0601 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0401 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
     if DEBUG
     dc.w $0700 ; 3 inital cursor color (black)
@@ -2959,7 +3351,7 @@ pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the 
     ; incbin 'spr_pal.dat'
 
 scrollerpal_sequence:
-    dc.w 100 ;1600
+    dc.w 1200 ;1600
     ;dc.w 0 ; offset
     dc.l 0 ; increment
     dc.w 8
@@ -3066,7 +3458,100 @@ scrollerpal_sequence:
     dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
     dc.w 2 ; 0w: delay
     dc.l 0 ; increment (+124)
-    dc.w 0 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+120)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+116)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+112)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+108)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+104)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+100)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+96)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+92)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+88)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+84)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+80)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+76)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+72)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+68)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+64)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+60)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+56)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+52)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+48)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+44)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+40)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+36)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+32)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+28)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+24)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+20)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+16)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+12)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+8)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+4)
+    dc.w 8 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)
+    dc.w 2 ; 0w: delay
+    dc.l -4 ; increment (+0)
+    dc.w -8*62 ; 6w: offset to the next entry (0: repeat forever, 8: next entry)  
 
 scrollerpals_start: ; constant 64 palettes, same as the upper half of the screen
 scrollerpals: ; offset 0
@@ -3983,6 +4468,23 @@ snd_bell_dosound:
     dc.b 11,0    ;  /* envelope */
     dc.b 12,16
     dc.b 13,9
+    dc.b $ff,$00
+
+snd_crash_dosound:
+    dc.b 0,112   ; /* channel A pitch */
+    dc.b 1,0
+    dc.b 2,0     ;  /* no channel B */
+    dc.b 3,0
+    dc.b 4,0     ;  /* no channel C */
+    dc.b 5,0
+    dc.b 6,$60     ;  /* noise */
+    dc.b 7,$FE   ; /* no sound or noise except channel A */
+    dc.b 8,$10  ;  /* channel A amplitude */
+    dc.b 9,0
+    dc.b 10,0
+    dc.b 11,6    ;  /* envelope */
+    dc.b 12,0
+    dc.b 13,8
     dc.b $ff,$00
 
 snd_bluesline_dosound:
