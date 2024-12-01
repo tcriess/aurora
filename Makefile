@@ -6,19 +6,27 @@ MAIN := aurora.s
 TARGET_DEBUG := aurorad.tos
 TARGET := aurora.tos
 TARGET_COMPRESSED := aurorac.tos
+CREATESCROLLTEXT := createtext.py
+CONVERTLOGO := convert_logo.py
 
 .PHONY: all clean debug
 all: $(TARGET)
 debug: $(TARGET_DEBUG)
 
-$(TARGET): $(wildcard *.s)
+$(TARGET): $(wildcard *.s) gen_scrolltext.s gen_logo.s
 		$(VASM) $(VASMFLAGS) $(MAIN) -o $@
 
 $(TARGET_COMPRESSED): $(TARGET)
 		$(STRINKLER) -9 -v $(TARGET) $(TARGET_COMPRESSED)
 
-$(TARGET_DEBUG): $(wildcard *.s)
+$(TARGET_DEBUG): $(wildcard *.s) gen_scrolltext.s gen_logo.s
 		$(VASM) $(VASMFLAGS_DEBUG) $(MAIN) -o $@
+
+gen_scrolltext.s: $(CREATESCROLLTEXT)
+		python3 $(CREATESCROLLTEXT) > gen_scrolltext.s
+
+gen_logo.s: $(CONVERTLOGO)
+		python3 $(CONVERTLOGO) > gen_logo.s
 
 all: $(TARGET) $(TARGET_DEBUG) $(TARGET_COMPRESSED)
 

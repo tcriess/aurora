@@ -9,8 +9,8 @@ import sys
 
 # the visisble area is about 410 x 260
 
-im = iio.imread('logo4.png')
-# print(im.shape)
+im = iio.imread('logo_105x50.png') # 410x101 with the same logo 4 times
+
 
 # in order to create screen data, we need to set 230 bytes per line (4 words=8 bytes per 16 pixels)
 # visible screen starts at pixel 6, that is in the midde of the first word
@@ -24,12 +24,13 @@ im = np.roll(im, -1, axis=1)
 no_lines = im.shape[0]
 
 slices = np.split(im, 26, axis=1)
+#slices = np.split(im, 13, axis=1)
 
 # 26 slices of 16x202
 #
 # test: only store one quarter
 slices = slices[:13]
-no_lines = no_lines // 2
+#no_lines = no_lines // 2
 
 print('; GENERATED CODE, DO NOT EDIT')
 

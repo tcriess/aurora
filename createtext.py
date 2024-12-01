@@ -19,8 +19,9 @@ def mapper(c):
     return r
 
 text = " ".join(["" for _ in range(100)])
-text += "$% $% $% hello sillyventure...  poor little cursor ... wants to break the border ...  $% $% $% "
-text += " and now... more color!  $% $% $% code by tecer - hacknology $% $% $%   thanks to leonard for the strinkler port and a lot of inspiration!  $% $% $%  thanks to james ingram for the coding tutorials! $% $% $%  greetz to the abbuc community  $% $% $%  thanks to grey and the sv team for sillyventure!  $% $% $%"
+text += "$% $% $% hello sillyventure...  $% $% $% "
+text += " ... more color!  $% $% $%  music by zoltarx - new generation  $% $% $%  code and gfx by tecer - hacknology $% $% $%   cheers to leonard!  $% $% $%  and greetz to abbuc!  $% $% $%  thanks to the sv team!  $% $% $%"
 
 a = map(mapper, text)
+print('; GENERATED CODE, DO NOT EDIT')
 print("    dc.b " + ",".join(list(a)))
