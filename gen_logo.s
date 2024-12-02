@@ -115,7 +115,7 @@
     dc.l $00000000 ; pixels 1-16, planes 1+2, bytes 1-4
     dc.l $03e00000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $00000000 ; pixels 33-48, planes 1+2, bytes 17-20
-    dc.l $01810000 ; pixels 49-64, planes 1+2, bytes 25-28
+    dc.l $01800000 ; pixels 49-64, planes 1+2, bytes 25-28
     dc.l $60030000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $80000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
@@ -157,7 +157,7 @@
     dc.l $00000000 ; pixels 1-16, planes 1+2, bytes 1-4
     dc.l $00000000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $03e00000 ; pixels 33-48, planes 1+2, bytes 17-20
-    dc.l $00500000 ; pixels 49-64, planes 1+2, bytes 25-28
+    dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
     dc.l $00070000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $87f00000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
@@ -189,7 +189,7 @@
     dc.l $00000000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $18000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $0ff00000 ; pixels 97-112, planes 1+2, bytes 49-52
-    dc.l $2fc00000 ; pixels 113-128, planes 1+2, bytes 57-60
+    dc.l $0fc00000 ; pixels 113-128, planes 1+2, bytes 57-60
     dc.l $00000000 ; pixels 129-144, planes 1+2, bytes 65-68
     dc.l $38000000 ; pixels 145-160, planes 1+2, bytes 73-76
     dc.l $00000000 ; pixels 161-176, planes 1+2, bytes 81-84
@@ -200,7 +200,7 @@
     dc.l $7fe00000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $00000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $07c00000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $00200000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $00000000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $0c000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $00030000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -214,7 +214,7 @@
     dc.l $c01f0000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $ffff0000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $80700000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $04800000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $00000000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $06000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $00000000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -228,7 +228,7 @@
     dc.l $00000000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $00000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $7c1c0000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $18fc0000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $00fc0000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $070c0000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $00000000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -242,7 +242,7 @@
     dc.l $0e070000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $00000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $07830000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $27ce0000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $07ce0000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $030f0000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $ffff0000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $ffe00000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -256,7 +256,7 @@
     dc.l $0e030000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $07000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $00e10000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $de070000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $de060000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $00f00000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -270,8 +270,8 @@
     dc.l $00000000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $01fe0000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $001e0000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $2e060000 ; pixels 65-80, planes 1+2, bytes 33-36
-    dc.l $a0000000 ; pixels 81-96, planes 1+2, bytes 41-44
+    dc.l $0e060000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $001f0000 ; pixels 113-128, planes 1+2, bytes 57-60
     dc.l $fe000000 ; pixels 129-144, planes 1+2, bytes 65-68
@@ -285,21 +285,21 @@
     dc.l $00000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
     dc.l $071e0000 ; pixels 65-80, planes 1+2, bytes 33-36
-    dc.l $41000000 ; pixels 81-96, planes 1+2, bytes 41-44
+    dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $00000000 ; pixels 113-128, planes 1+2, bytes 57-60
     dc.l $01800000 ; pixels 129-144, planes 1+2, bytes 65-68
     dc.l $0fff0000 ; pixels 145-160, planes 1+2, bytes 73-76
     dc.l $fffc0000 ; pixels 161-176, planes 1+2, bytes 81-84
-    dc.l $60000000 ; pixels 177-192, planes 1+2, bytes 89-92
+    dc.l $00000000 ; pixels 177-192, planes 1+2, bytes 89-92
     dc.l $1c000000 ; pixels 193-208, planes 1+2, bytes 97-100
 ; line 22
     dc.l $03800000 ; pixels 1-16, planes 1+2, bytes 1-4
-    dc.l $00200000 ; pixels 17-32, planes 1+2, bytes 9-12
+    dc.l $00000000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $0c000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $03f10000 ; pixels 65-80, planes 1+2, bytes 33-36
-    dc.l $83ff0000 ; pixels 81-96, planes 1+2, bytes 41-44
+    dc.l $03f00000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $03ff0000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $ffe00000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $18000000 ; pixels 113-128, planes 1+2, bytes 57-60
     dc.l $00fe0000 ; pixels 129-144, planes 1+2, bytes 65-68
@@ -312,7 +312,7 @@
     dc.l $00700000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $0fff0000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $ffff0000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $c0120000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $c0000000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $7c000000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -326,7 +326,7 @@
     dc.l $e0000000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $00000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
-    dc.l $70400000 ; pixels 65-80, planes 1+2, bytes 33-36
+    dc.l $70000000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $07ff0000 ; pixels 113-128, planes 1+2, bytes 57-60
@@ -338,7 +338,7 @@
 ; line 25
     dc.l $00000000 ; pixels 1-16, planes 1+2, bytes 1-4
     dc.l $3e070000 ; pixels 17-32, planes 1+2, bytes 9-12
-    dc.l $fe800000 ; pixels 33-48, planes 1+2, bytes 17-20
+    dc.l $fe000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
     dc.l $1ff80000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
@@ -348,7 +348,7 @@
     dc.l $00000000 ; pixels 145-160, planes 1+2, bytes 73-76
     dc.l $00000000 ; pixels 161-176, planes 1+2, bytes 81-84
     dc.l $00000000 ; pixels 177-192, planes 1+2, bytes 89-92
-    dc.l $7a0e0000 ; pixels 193-208, planes 1+2, bytes 97-100
+    dc.l $780e0000 ; pixels 193-208, planes 1+2, bytes 97-100
 ; line 26
     dc.l $00000000 ; pixels 1-16, planes 1+2, bytes 1-4
     dc.l $1c380000 ; pixels 17-32, planes 1+2, bytes 9-12
@@ -356,11 +356,11 @@
     dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
     dc.l $00000000 ; pixels 65-80, planes 1+2, bytes 33-36
     dc.l $00070000 ; pixels 81-96, planes 1+2, bytes 41-44
-    dc.l $ffe80000 ; pixels 97-112, planes 1+2, bytes 49-52
+    dc.l $ffe00000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $00000000 ; pixels 113-128, planes 1+2, bytes 57-60
-    dc.l $1e870000 ; pixels 129-144, planes 1+2, bytes 65-68
+    dc.l $1e070000 ; pixels 129-144, planes 1+2, bytes 65-68
     dc.l $ffff0000 ; pixels 145-160, planes 1+2, bytes 73-76
-    dc.l $fe700000 ; pixels 161-176, planes 1+2, bytes 81-84
+    dc.l $fe000000 ; pixels 161-176, planes 1+2, bytes 81-84
     dc.l $00000000 ; pixels 177-192, planes 1+2, bytes 89-92
     dc.l $00010000 ; pixels 193-208, planes 1+2, bytes 97-100
 ; line 27
@@ -403,7 +403,7 @@
     dc.l $00000000 ; pixels 129-144, planes 1+2, bytes 65-68
     dc.l $00000000 ; pixels 145-160, planes 1+2, bytes 73-76
     dc.l $00000000 ; pixels 161-176, planes 1+2, bytes 81-84
-    dc.l $00c20000 ; pixels 177-192, planes 1+2, bytes 89-92
+    dc.l $00c00000 ; pixels 177-192, planes 1+2, bytes 89-92
     dc.l $00300000 ; pixels 193-208, planes 1+2, bytes 97-100
 ; line 30
     dc.l $000c0000 ; pixels 1-16, planes 1+2, bytes 1-4
@@ -429,12 +429,12 @@
     dc.l $00ff0000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $007f0000 ; pixels 113-128, planes 1+2, bytes 57-60
     dc.l $fffc0000 ; pixels 129-144, planes 1+2, bytes 65-68
-    dc.l $00300000 ; pixels 145-160, planes 1+2, bytes 73-76
+    dc.l $00000000 ; pixels 145-160, planes 1+2, bytes 73-76
     dc.l $00000000 ; pixels 161-176, planes 1+2, bytes 81-84
     dc.l $00000000 ; pixels 177-192, planes 1+2, bytes 89-92
     dc.l $03000000 ; pixels 193-208, planes 1+2, bytes 97-100
 ; line 32
-    dc.l $00e20000 ; pixels 1-16, planes 1+2, bytes 1-4
+    dc.l $00e00000 ; pixels 1-16, planes 1+2, bytes 1-4
     dc.l $87030000 ; pixels 17-32, planes 1+2, bytes 9-12
     dc.l $80000000 ; pixels 33-48, planes 1+2, bytes 17-20
     dc.l $00000000 ; pixels 49-64, planes 1+2, bytes 25-28
@@ -484,8 +484,8 @@
     dc.l $00000000 ; pixels 81-96, planes 1+2, bytes 41-44
     dc.l $00000000 ; pixels 97-112, planes 1+2, bytes 49-52
     dc.l $01800000 ; pixels 113-128, planes 1+2, bytes 57-60
-    dc.l $5ffe0000 ; pixels 129-144, planes 1+2, bytes 65-68
-    dc.l $80000000 ; pixels 145-160, planes 1+2, bytes 73-76
+    dc.l $1ffe0000 ; pixels 129-144, planes 1+2, bytes 65-68
+    dc.l $00000000 ; pixels 145-160, planes 1+2, bytes 73-76
     dc.l $003f0000 ; pixels 161-176, planes 1+2, bytes 81-84
     dc.l $803f0000 ; pixels 177-192, planes 1+2, bytes 89-92
     dc.l $80000000 ; pixels 193-208, planes 1+2, bytes 97-100

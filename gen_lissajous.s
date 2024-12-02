@@ -1,33 +1,45 @@
 ; GENERATED CODE
     ; 390,70
     dc.w 2 ; delay
-    dc.l ani_spr_em ; sprite
+    dc.l ani_spr_butterfly ; sprite
     dc.w 16292 ; offset
     dc.w 6*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 386,97
+    ; 388,89
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 22502 ; offset
-    dc.w 2*sprite_size_per_shift ; shift
-    dc.w 12 ; next entry
-    ; 375,120
-    dc.w 2 ; delay
-    dc.l 0 ; sprite
-    dc.w 27784 ; offset
-    dc.w 7*sprite_size_per_shift ; shift
-    dc.w 12 ; next entry
-    ; 356,135
-    dc.w 2 ; delay
-    dc.l 0 ; sprite
-    dc.w 31226 ; offset
+    dc.w 20662 ; offset
     dc.w 4*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 332,139
+    ; 382,107
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 24794 ; offset
+    dc.w 14*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 372,122
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 28244 ; offset
+    dc.w 4*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 359,133
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 30766 ; offset
+    dc.w 7*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 343,139
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 32138 ; offset
+    dc.w 7*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 324,139
     dc.w 2 ; delay
     dc.l 0 ; sprite
     dc.w 32130 ; offset
-    dc.w 12*sprite_size_per_shift ; shift
+    dc.w 4*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
     ; 302,133
     dc.w 2 ; delay
@@ -35,29 +47,41 @@
     dc.w 30734 ; offset
     dc.w 14*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 268,117
+    ; 278,122
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 27038 ; offset
-    dc.w 12*sprite_size_per_shift ; shift
+    dc.w 28196 ; offset
+    dc.w 6*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 232,93
+    ; 253,107
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 21502 ; offset
-    dc.w 8*sprite_size_per_shift ; shift
+    dc.w 24730 ; offset
+    dc.w 13*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 194,65
+    ; 226,89
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 15046 ; offset
+    dc.w 20582 ; offset
     dc.w 2*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 156,39
+    ; 199,69
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 9042 ; offset
+    dc.w 15966 ; offset
+    dc.w 7*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 172,50
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 11580 ; offset
     dc.w 12*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 146,32
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 7432 ; offset
+    dc.w 2*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
     ; 120,17
     dc.w 2 ; delay
@@ -65,29 +89,41 @@
     dc.w 3966 ; offset
     dc.w 8*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 88,3
+    ; 97,6
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 730 ; offset
-    dc.w 8*sprite_size_per_shift ; shift
+    dc.w 1428 ; offset
+    dc.w 1*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 59,0
+    ; 75,0
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 32 ; offset
+    dc.w 11*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 56,0
     dc.w 2 ; delay
     dc.l 0 ; sprite
     dc.w 24 ; offset
+    dc.w 8*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 40,6
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 1396 ; offset
+    dc.w 8*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 27,17
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 3918 ; offset
     dc.w 11*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 37,8
+    ; 17,32
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 1856 ; offset
-    dc.w 5*sprite_size_per_shift ; shift
-    dc.w 12 ; next entry
-    ; 20,25
-    dc.w 2 ; delay
-    dc.l 0 ; sprite
-    dc.w 5758 ; offset
-    dc.w 4*sprite_size_per_shift ; shift
+    dc.w 7368 ; offset
+    dc.w 1*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
     ; 11,50
     dc.w 2 ; delay
@@ -95,29 +131,41 @@
     dc.w 11500 ; offset
     dc.w 11*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 10,78
+    ; 10,70
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 17940 ; offset
+    dc.w 16100 ; offset
     dc.w 10*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 16,104
+    ; 11,89
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 23928 ; offset
-    dc.w 0*sprite_size_per_shift ; shift
+    dc.w 20470 ; offset
+    dc.w 11*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 29,125
+    ; 17,108
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 28758 ; offset
-    dc.w 13*sprite_size_per_shift ; shift
-    dc.w 12 ; next entry
-    ; 49,137
-    dc.w 2 ; delay
-    dc.l 0 ; sprite
-    dc.w 31534 ; offset
+    dc.w 24848 ; offset
     dc.w 1*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 27,123
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 28298 ; offset
+    dc.w 11*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 40,133
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 30606 ; offset
+    dc.w 8*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 56,139
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 31994 ; offset
+    dc.w 8*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
     ; 75,139
     dc.w 2 ; delay
@@ -125,29 +173,41 @@
     dc.w 32002 ; offset
     dc.w 11*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 106,129
+    ; 97,133
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 29718 ; offset
-    dc.w 10*sprite_size_per_shift ; shift
+    dc.w 30638 ; offset
+    dc.w 1*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 141,110
+    ; 121,122
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 25364 ; offset
-    dc.w 13*sprite_size_per_shift ; shift
+    dc.w 28116 ; offset
+    dc.w 9*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 178,85
+    ; 146,107
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 19638 ; offset
+    dc.w 24682 ; offset
     dc.w 2*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 216,57
+    ; 173,89
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 13214 ; offset
+    dc.w 20550 ; offset
+    dc.w 13*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 200,69
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 15966 ; offset
     dc.w 8*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 227,50
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 11612 ; offset
+    dc.w 3*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
     ; 253,31
     dc.w 2 ; delay
@@ -155,29 +215,41 @@
     dc.w 7250 ; offset
     dc.w 13*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 289,12
+    ; 279,16
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 2904 ; offset
-    dc.w 1*sprite_size_per_shift ; shift
+    dc.w 3816 ; offset
+    dc.w 7*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 320,1
+    ; 303,6
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 390 ; offset
-    dc.w 0*sprite_size_per_shift ; shift
+    dc.w 1524 ; offset
+    dc.w 15*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 347,1
+    ; 324,0
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 398 ; offset
-    dc.w 11*sprite_size_per_shift ; shift
+    dc.w 160 ; offset
+    dc.w 4*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 368,12
+    ; 343,0
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 2944 ; offset
-    dc.w 0*sprite_size_per_shift ; shift
+    dc.w 168 ; offset
+    dc.w 7*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 360,6
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 1556 ; offset
+    dc.w 8*sprite_size_per_shift ; shift
+    dc.w 12 ; next entry
+    ; 373,17
+    dc.w 2 ; delay
+    dc.l 0 ; sprite
+    dc.w 4094 ; offset
+    dc.w 5*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
     ; 382,32
     dc.w 2 ; delay
@@ -185,9 +257,9 @@
     dc.w 7544 ; offset
     dc.w 14*sprite_size_per_shift ; shift
     dc.w 12 ; next entry
-    ; 389,58
+    ; 388,50
     dc.w 2 ; delay
     dc.l 0 ; sprite
-    dc.w 13532 ; offset
-    dc.w 5*sprite_size_per_shift ; shift
-    dc.w -12*31 ; next entry, jump to start
+    dc.w 11692 ; offset
+    dc.w 4*sprite_size_per_shift ; shift
+    dc.w -12*43 ; next entry, jump to start

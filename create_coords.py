@@ -24,7 +24,7 @@ def lissajous(t, delta=pi/2, a=1.0, b=2.0, A=1.0, B=1.0):
 
 print("; GENERATED CODE")
 
-DIV = 8
+DIV = 7
 
 steps = ceil(2*pi*DIV)
 
@@ -38,7 +38,7 @@ for t in range(steps):
     print(f"    ; {x},{y}")
     print(f"    dc.w 2 ; delay")
     if t == 0:
-        print(f"    dc.l ani_spr_em ; sprite")
+        print(f"    dc.l ani_spr_butterfly ; sprite")
     else:
         print(f"    dc.l 0 ; sprite")
     print(f"    dc.w {offset} ; offset")

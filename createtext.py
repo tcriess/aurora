@@ -20,7 +20,7 @@ def mapper(c):
 
 text = " ".join(["" for _ in range(110)])
 text += "$% $% $% hello sillyventure...  $% $% $% "
-text += " ... more color!  $% $% $%  music by zoltarx - new generation  $% $% $%  full sync code and gfx by tecer - hacknology $% $% $%   cheers to leonard!  $% $% $%  greetz to abbuc!  $% $% $%  thanks to the sv team!  $% $% $%"
+text += " ... more color!  $% $% $%  music by zoltarx - new generation  $% $% $%  code by tecer - hacknology $% $% $%   cheers to leonard!  $% $% $%  greetz to abbuc!  $% $% $%  thanks to the sv team!  $% $% $%"
 
 a = map(mapper, text)
 print('; GENERATED CODE, DO NOT EDIT')

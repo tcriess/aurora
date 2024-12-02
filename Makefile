@@ -9,12 +9,13 @@ TARGET_COMPRESSED := aurorac.tos
 CREATESCROLLTEXT := createtext.py
 CONVERTLOGO := convert_logo.py
 CREATECOORDS := create_coords.py
+CONVERTBUTTERFLY := convert_butterfly.py
 
 .PHONY: all clean debug
 all: $(TARGET)
 debug: $(TARGET_DEBUG)
 
-$(TARGET): $(wildcard *.s) gen_scrolltext.s gen_logo.s gen_lissajous.s
+$(TARGET): $(wildcard *.s) gen_scrolltext.s gen_logo.s gen_lissajous.s gen_butterfly.s
 		$(VASM) $(VASMFLAGS) $(MAIN) -o $@
 
 $(TARGET_COMPRESSED): $(TARGET)
@@ -31,6 +32,9 @@ gen_logo.s: $(CONVERTLOGO)
 
 gen_lissajous.s: $(CREATECOORDS)
 		python3 $(CREATECOORDS) > gen_lissajous.s
+
+gen_butterfly.s: $(CONVERTBUTTERFLY)
+		python3 $(CONVERTBUTTERFLY) > gen_butterfly.s
 
 all: $(TARGET) $(TARGET_DEBUG) $(TARGET_COMPRESSED)
 
