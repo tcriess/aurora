@@ -635,7 +635,7 @@ my_70:
     move.l (a5,d0.w),a5 ; sprite background - address of correct sprite background struct in a5
     move.l (a5),a6 ; address on screen to put the old background back on in a6
     move.l a0,a4 ; screen address
-    add.w 8(a2),a4 ; correct address to put the sprite
+    adda.w 8(a2),a4 ; correct address to put the sprite
     move.l a4,(a5)+ ; save for later in the bg struct
     move.l 2(a2),a3 ; sprite data
     add.w 6(a2),a3 ; add offset to the correct shift -> address of final sprite data in a3
@@ -1565,7 +1565,7 @@ my_70:
     ; counter in 0(a1)
     move.w 0(a1),d0
     subq.w #1,d0
-    bgt .dosndexit2 ; counter still > 0, continue in the next vbi
+    bge .dosndexit2 ; counter still > 0, continue in the next vbi
 
     ; counter <=0 - continue here
     clr.w d0 ; reset counter to 0
@@ -2225,30 +2225,42 @@ pick_sysfont_chars:
     dc.b $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$2e,$2d,$21,$0e,$0f ; P,Q,...,Z,.,-,!,[atarileft],[atariright]
 
 pal_sequence:
-    dc.w 625 ; delay
+    dc.w 1000 ; delay
     dc.l pal_start ; address of the new palette
     dc.w 8 ; offset to the next entry
-    dc.w 5
-    dc.l pal_border1 ; address of the new palette
+    ;dc.w 5
+    ;dc.l pal_border1 ; address of the new palette
+    ;dc.w 8 ; offset to the next entry
+    ;dc.w 5
+    ;dc.l pal_border2 ; address of the new palette
+    ;dc.w 8 ; offset to the next entry
+    ;dc.w 180 ; delay
+    ;dc.l pal_start ; address of the new palette
+    ;dc.w 8 ; offset to the next entry
+    ;dc.w 5
+    ;dc.l pal_border1 ; address of the new palette
+    ;dc.w 8 ; offset to the next entry
+    ;dc.w 5
+    ;dc.l pal_border2 ; address of the new palette
+    ;dc.w 8 ; offset to the next entry
+    ;dc.w 100 ; delay
+    ;dc.l pal_start ; address of the new palette
+    ;dc.w 8 ; offset to the next entry
+    dc.w 100 ; delay
+    dc.l pal_black ; address of the new palette
     dc.w 8 ; offset to the next entry
-    dc.w 5
-    dc.l pal_border2 ; address of the new palette
+    dc.w 5 ; delay
+    dc.l pal_black1 ; address of the new palette
     dc.w 8 ; offset to the next entry
-    dc.w 180 ; delay
-    dc.l pal_start ; address of the new palette
-    dc.w 8 ; offset to the next entry
-    dc.w 5
-    dc.l pal_border1 ; address of the new palette
-    dc.w 8 ; offset to the next entry
-    dc.w 5
-    dc.l pal_border2 ; address of the new palette
+    dc.w 5 ; delay
+    dc.l pal_black2 ; address of the new palette
     dc.w 8 ; offset to the next entry
     dc.w 100 ; delay
-    dc.l pal_start ; address of the new palette
-    dc.w 8 ; offset to the next entry
-    dc.w 1000 ; delay
     dc.l pal_black ; address of the new palette
-    dc.w 0 ; offset to the next entry
+    dc.w 8 ; offset to the next entry
+    dc.w 50 ; delay
+    dc.l pal_black3 ; address of the new palette
+    dc.w -8*4 ; offset to the next entry
 
 snd_sequence: ; as opposed to the other sequences, the sound is played when the delay counter has run out. at the moment, the keyclick data is actually ignored and always the same click is played
     dc.w 50
@@ -2486,17 +2498,17 @@ snd_sequence: ; as opposed to the other sequences, the sound is played when the 
     dc.l snd_crash_dosound
     dc.w 8
 
-    dc.w 50
-    dc.l music
-    ;dc.l snd_bluesline_dosound
-    dc.w 8    
-    dc.w 300
+    ;dc.w 50
+    ;dc.l music
+    ;;dc.l snd_bluesline_dosound
+    ;dc.w 8    
+    dc.w 0
     ;dc.l snd_bluesline_dosound
     dc.l music
     dc.w 8  
-    dc.w 600  
-    dc.l music_project
-    dc.w -8
+    dc.w 3000  
+    dc.l music
+    dc.w 0
 
     ; the sprite sequence - sprite 1
     ; 2s start position, then moving a few steps to the right at increasing speed
@@ -2828,7 +2840,7 @@ spr_sequence:
     dc.w sprite_size_per_shift*15 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
 
-    include 'spr_lissajous.s'
+    include 'gen_lissajous.s'
 
 spr_sequence2:
     dc.w 200 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
@@ -2874,12 +2886,13 @@ spr_sequence2:
     dc.w 230*(28-4+8)+192 ; 6w: screen address offset
     dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
     dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
-    dc.w 100 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
+    dc.w 300 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l 0 ; 2l: animated sprite definition
     dc.w 230*(28-4+8)+192 ; 6w: screen address offset
     dc.w 1*sprite_size_per_shift*8 ; 8w: sprite shift address offset
-    dc.w 0 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
+    dc.w 12 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
     
+    include 'gen_lissajous.s'
 
 
 ani_spr_cursor:
@@ -3224,7 +3237,94 @@ pal_black: ; default palette. we start with a white bg, plane 1+2 are for the ba
     dc.w $0700 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0700 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
     else
-    dc.w $0302 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0000 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0000 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    endif
+    if DEBUG
+    dc.w $0700 ; 3 inital cursor color (black)
+    else
+    dc.w $0777 ; 3 inital cursor color (black)
+    endif
+    dc.w $0222 ; 4 scroller border left
+    dc.w $0222 ; 5 scroller border left
+    dc.w $0222 ; 6 scroller border left
+    dc.w $0222 ; 7 scroller border left
+    dc.w $0333 ; 8 scroller border right
+    dc.w $0333 ; 9 scroller border right
+    dc.w $0333 ; 10 scroller border right
+    dc.w $0333 ; 11 scroller border right
+    dc.w $0444 ; 12 scroller main color
+    dc.w $0444 ; 13 scroller main color
+    dc.w $0444 ; 14 scroller main color
+    dc.w $0444 ; 15 scroller main color
+
+    pal_black1: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0000 ; 0 %0000 bg
+    if DEBUG
+    dc.w $0501 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0000 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    else
+    dc.w $0501 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0000 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    endif
+    if DEBUG
+    dc.w $0700 ; 3 inital cursor color (black)
+    else
+    dc.w $0777 ; 3 inital cursor color (black)
+    endif
+    dc.w $0222 ; 4 scroller border left
+    dc.w $0222 ; 5 scroller border left
+    dc.w $0222 ; 6 scroller border left
+    dc.w $0222 ; 7 scroller border left
+    dc.w $0333 ; 8 scroller border right
+    dc.w $0333 ; 9 scroller border right
+    dc.w $0333 ; 10 scroller border right
+    dc.w $0333 ; 11 scroller border right
+    dc.w $0444 ; 12 scroller main color
+    dc.w $0444 ; 13 scroller main color
+    dc.w $0444 ; 14 scroller main color
+    dc.w $0444 ; 15 scroller main color
+
+pal_black2: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0000 ; 0 %0000 bg
+    if DEBUG
+    dc.w $0700 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0700 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    else
+    dc.w $0000 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0302 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    endif
+    if DEBUG
+    dc.w $0700 ; 3 inital cursor color (black)
+    else
+    dc.w $0777 ; 3 inital cursor color (black)
+    endif
+    dc.w $0222 ; 4 scroller border left
+    dc.w $0222 ; 5 scroller border left
+    dc.w $0222 ; 6 scroller border left
+    dc.w $0222 ; 7 scroller border left
+    dc.w $0333 ; 8 scroller border right
+    dc.w $0333 ; 9 scroller border right
+    dc.w $0333 ; 10 scroller border right
+    dc.w $0333 ; 11 scroller border right
+    dc.w $0444 ; 12 scroller main color
+    dc.w $0444 ; 13 scroller main color
+    dc.w $0444 ; 14 scroller main color
+    dc.w $0444 ; 15 scroller main color
+
+pal_black3: ; default palette. we start with a white bg, plane 1+2 are for the background, plane 3+4 are for the scroller
+    ; plane 1+2 %0000,%1000,%0100,%1100 ->  4,8,12
+    ; plane 3+4 %0000,%0010,%0001,%0011 ->  1,2,3
+    dc.w $0000 ; 0 %0000 bg
+    if DEBUG
+    dc.w $0700 ; 1 initial border color (invisible, change to 777 later) (further out)
+    dc.w $0700 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
+    else
+    dc.w $0501 ; 1 initial border color (invisible, change to 777 later) (further out)
     dc.w $0302 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
     endif
     if DEBUG
@@ -3346,7 +3446,7 @@ pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the 
     ; incbin 'spr_pal.dat'
 
 scrollerpal_sequence:
-    dc.w 1200 ;1600
+    dc.w 1300 ;1600
     ;dc.w 0 ; offset
     dc.l 0 ; increment
     dc.w 8

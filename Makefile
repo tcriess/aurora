@@ -8,12 +8,13 @@ TARGET := aurora.tos
 TARGET_COMPRESSED := aurorac.tos
 CREATESCROLLTEXT := createtext.py
 CONVERTLOGO := convert_logo.py
+CREATECOORDS := create_coords.py
 
 .PHONY: all clean debug
 all: $(TARGET)
 debug: $(TARGET_DEBUG)
 
-$(TARGET): $(wildcard *.s) gen_scrolltext.s gen_logo.s
+$(TARGET): $(wildcard *.s) gen_scrolltext.s gen_logo.s gen_lissajous.s
 		$(VASM) $(VASMFLAGS) $(MAIN) -o $@
 
 $(TARGET_COMPRESSED): $(TARGET)
@@ -27,6 +28,9 @@ gen_scrolltext.s: $(CREATESCROLLTEXT)
 
 gen_logo.s: $(CONVERTLOGO)
 		python3 $(CONVERTLOGO) > gen_logo.s
+
+gen_lissajous.s: $(CREATECOORDS)
+		python3 $(CREATECOORDS) > gen_lissajous.s
 
 all: $(TARGET) $(TARGET_DEBUG) $(TARGET_COMPRESSED)
 

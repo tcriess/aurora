@@ -14,25 +14,28 @@ def convert_coord(x, y):
     # y coord is simple
     offset = y * 230  # one line has 230 bytes
     slice = x // 16  # which 16-pixel slice are we in
-    offset += slice*8  # 16 pixels take 8 bytes (4 planes * 2 bytes)
+    offset = offset + slice*8  # 16 pixels take 8 bytes (4 planes * 2 bytes)
     shift = x % 16
     return offset, shift
 
-def lissajous(t, delta=pi/2, a=1.0, b=1.5, A=1.0, B=1.0):
+def lissajous(t, delta=pi/2, a=1.0, b=2.0, A=1.0, B=1.0):
     x, y = A*sin(a*float(t) + delta), B*sin(b*t)
     return x, y
 
 print("; GENERATED CODE")
 
-steps = ceil(2*pi*10)
+DIV = 8
+
+steps = ceil(2*pi*DIV)
 
 for t in range(steps):
-    x, y = lissajous(float(t)/10.0)
+    x, y = lissajous(float(t)/DIV)
     x = x*190 + 200
-    y = y*90 + 100
+    y = y*70 + 70
     x = int(x)
     y = int(y)
     offset, shift = convert_coord(x, y)
+    print(f"    ; {x},{y}")
     print(f"    dc.w 2 ; delay")
     if t == 0:
         print(f"    dc.l ani_spr_em ; sprite")
@@ -41,6 +44,6 @@ for t in range(steps):
     print(f"    dc.w {offset} ; offset")
     print(f"    dc.w {shift}*sprite_size_per_shift ; shift")
     if t == steps-1:
-        print(f"    dc.w -12*{steps} ; next entry")
+        print(f"    dc.w -12*{steps-1} ; next entry, jump to start")
     else:
         print(f"    dc.w 12 ; next entry")
