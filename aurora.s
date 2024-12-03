@@ -460,7 +460,11 @@ snd_keyclick2 macro
 
 ; set up vbl (will initialize timer b every time)
     move.l $70.w,-(sp) ; store old vbl on top of stack
+    if DEBUG
+    move.l #my_70_debug,$70.w ; install new vbl!
+    else
     move.l #my_70,$70.w ; install new vbl!
+    endif
 
 ; main program
     jsr inp ; wait for input
@@ -501,6 +505,92 @@ snd_keyclick2 macro
 ; terminate
     clr.l -(sp)
     trap #1
+
+    if DEBUG
+my_70_debug:
+    move.w sr,-(sp) ; store status register on top of stack
+    or.w #$0700,sr ; interrupts off
+
+    movem.l d0-d7/a0-a6,-(sp) ; store all registers
+
+; original pause code
+; pause for a bit - 1065 loops
+    move.w #1064,d0
+pause:
+    nop
+    dbra d0,pause ; nicht gesprungen (1x) 14 cycles, gesprungen (1064x) 12 cycles
+
+    eor.b #2,$ffff820a.w
+
+    rept 8
+    nop
+    endr
+
+; back to 50Hz
+    eor.b #2,$ffff820a.w
+
+; prepare registers
+    move.w  #$8209,a0 ; screen counter (video address low byte)
+    lea     $ff8260,a1      ; resolution
+    moveq   #0,d0
+    moveq   #16,d1
+    moveq   #2,d3
+    moveq   #0,d4
+
+.wait:
+    move.b  (a0),d0
+    beq.s   .wait ; wait for video address low byte != 0
+
+    if DEBUG
+    eor.w   #$f0f,$ffff8240.w ; do sth with palette bg color (remove this in production!)
+    else
+    dcb.w 5,$4e71
+    endif
+
+    sub.w   d0,d1 ; d0 <> 0, d1 = 16 => d1 = 16 - d0
+    lsl.w   d1,d0 ; probably some trick to sync with the correct number of cycles without hassle (i.e. "synchronize" the cpu)
+
+    ; SYNC is done here!
+    
+    if DEBUG
+    eor.w   #$f0f,$ffff8240.w ; reset palette bg color (remove this in production!)
+    else
+    dcb.w 5,$4e71
+    endif
+
+    move.w #$820a,a0
+
+    dcb.w   85,$4e71 ; 340 cycles = total 368 cycles in the first line after sync
+
+linesdeb   equ     227
+    rept    linesdeb
+
+    move.b  d3,(a1)         ; to monochrome
+    move.b  d4,(a1)         ; to lo-res
+
+    dcb.w   90,$4e71 ; 360c
+
+; RIGHT AGAIN...
+    move.b  d4,(a0)
+    move.b  d3,(a0)
+
+    dcb.w   13,$4e71
+
+; EXTRA!
+    move.b  d3,(a1)
+    nop
+    move.b  d4,(a1)
+
+    dcb.w   12,$4e71
+
+    endr
+
+    movem.l (sp)+,d0-d7/a0-a6
+    move.w  (a7)+,sr
+
+    rte
+
+    endif
 
 ; new vbl routine
 my_70:
@@ -1057,7 +1147,7 @@ my_70:
     ;dcb.w 2499,$4e71 ; A-I, without E2-G2
     ;dcb.w 901,$4e71 ; A-I, with E2-G2
     ;dcb.w 862,$4e71 ; A-J, with E2-G2
-    ;dcb.w 870,$4e71 ; A-J, with E2-G2, without D
+    ;dcb.w 870,$4e71 ; A-J, with E2-G2, witho ut D
     dcb.w 798,$4e71 ; A-J, with E2-G2, without D
 
 ; to 60Hz
@@ -1148,7 +1238,7 @@ my_70:
     dcb.w   50,$4e71 ; total 368 cycles in the first line after sync
     ;dcb.w   85,$4e71 ; 340 cycles = total 368 cycles in the first line after sync
 
-    nop
+    ;nop
 ; every line of the scroller needs *2* lines of byte shifting, unfortunately
 ; so we start the shifting here and go on for the next 128 lines to have a 64 lines-scroller
 ; the following rept contains 2 lines
@@ -1156,8 +1246,10 @@ my_70:
     
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome
+    ;nop
     move.b  d4,(a1)         ; to lo-res
 
+    nop
     nop
     
     move.l 8(a6),(a6)+ ; 1.
@@ -1209,6 +1301,8 @@ my_70:
     nop
     move.b  d4,(a1)
 
+    ;nop
+
     ; dcb.w   12,$4e71 ; 48 cycles
     move.w 8(a6),(a6)+ ; 13.
     addq #4,a6
@@ -1216,9 +1310,10 @@ my_70:
     ; need to adjust a6 addq #4,a6
 
 ; second line
-    nop
+    ;nop
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome
+    ;nop
     move.b  d4,(a1)         ; to lo-res
 
     addq #4,a6 ; adjustment which was missing from above
@@ -1255,6 +1350,7 @@ my_70:
 
     move.l 8(a6),(a6)+ ; 25.
     nop
+    nop
 
 * RIGHT AGAIN...
     move.b  d4,(a0)
@@ -1285,7 +1381,7 @@ my_70:
     nop
     nop
     nop
-    nop
+    ;nop
 
     endr
 
@@ -1351,6 +1447,7 @@ my_70:
     ; 348
     ; two nops to 356, or: advance the a5 address by 8 lines
     lea 8*230(a5),a5
+    nop
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1363,7 +1460,7 @@ my_70:
     nop ; 4 cycles
     move.b  d4,(a1) ; 8 cycles
 
-    dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    dcb.w   12,$4e71 ; 13*4 = 52 cycles
     endr
 
 ; 91 lines until the bottom border, we split this into the final 31 lines and the top 60 lines (the final 31 lines contain the scrolltext)!
@@ -1374,7 +1471,7 @@ my_70:
     move.b  d3,(a1)         ; to monochrome 8 cycles
     move.b  d4,(a1)         ; to lo-res     8 cycles    
 
-    dcb.w   89,$4e71 ; 89*4 = 356 cycles
+    dcb.w   90,$4e71 ; 89*4 = 356 cycles
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1387,7 +1484,7 @@ my_70:
     nop ; 4 cycles
     move.b  d4,(a1) ; 8 cycles
 
-    dcb.w   13,$4e71 ; 13*4 = 52 cycles
+    dcb.w   12,$4e71 ; 13*4 = 52 cycles
     endr ; 512 cycles per line
 
 ; here starts the scroller (actually, in the next line!), so we can adjust the palette in the following 64 lines
@@ -1397,12 +1494,13 @@ my_70:
     move.b  d4,(a1)         ; to lo-res     8 cycles    
 
     ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
-    dcb.w   60,$4e71
+    dcb.w   61,$4e71
     move.l current_scrollerpal_sequence_struct+2,a5
     ;lea scrollerpals,a5 ; 12c
     move.l (a5)+,a2 ; 12c
     move.w #$8240,a6 ; 8c
     movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
+    
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1419,7 +1517,7 @@ my_70:
     move.b  d4,(a1) ; 8 cycles
 
     ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
-    nop
+    ;nop
     movem.l d0-d2/d5-d6,(a6) ; 48c
 
     rept    31
@@ -1432,7 +1530,7 @@ my_70:
     move.l (a5)+,a2 ; 12c
     move.w #$8240,a6 ; 8c
     movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
-
+    nop
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
     move.b  d3,(a0) ; 8 cycles
@@ -1448,7 +1546,7 @@ my_70:
     move.b  d4,(a1) ; 8 cycles
 
     ;dcb.w   13,$4e71 ; 13*4 = 52 cycles
-    nop
+    ;nop
     movem.l d0-d2/d5-d6,(a6) ; 48c
     endr ; 512 cycles per line
 
@@ -1478,6 +1576,7 @@ my_70:
 
     move.l d5,12(a6)
     move.l d6,16(a6)
+    nop
 
 * RIGHT AGAIN...
     move.b  d4,(a0) ; 8 cycles
@@ -1502,7 +1601,7 @@ my_70:
 
     ;dcb.w   8,$4e71 ; 8*4 = 32 cycles
     move.b  d4,(a0) ; 8 cycles
-    nop
+    ;nop
     move.b  d3,(a0) ; 8 cycles
 
 ; total of 512 cycles here also
@@ -1514,7 +1613,7 @@ my_70:
     move.b  d4,(a1)         ; to lo-res
 
     ;dcb.w   89,$4e71 ; 356 cycles
-    dcb.w   65,$4e71
+    dcb.w   66,$4e71
     move.l (a5)+,a2 ; 12c
     move.w #$8240,a6 ; 8c
     movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
@@ -1534,7 +1633,7 @@ my_70:
     move.b  d4,(a1)
 
     ;dcb.w   13,$4e71 ; 48 cycles
-    nop
+    ;nop
     movem.l d0-d2/d5-d6,(a6) ; 48c
     
     endr ; same as before, 512 cycles per line
@@ -1545,7 +1644,7 @@ my_70:
     move.b  d4,(a1)         ; to lo-res
 
     ;dcb.w   89,$4e71 ; 356 cycles
-    dcb.w   63,$4e71
+    dcb.w   64,$4e71
     move.l current_pal_sequence_struct+2,a2
     ;move.l (a5)+,a2 ; 12c
     move.w #$8240,a6 ; 8c
@@ -1566,9 +1665,8 @@ my_70:
     move.b  d4,(a1)
 
     ;dcb.w   13,$4e71 ; 48 cycles
-    nop
+    ;nop
     movem.l d0-d2/d5-d6,(a6) ; 48c
-
 
 ; adapted code of the original dosound xbios routine (https://st-news.com/issues/st-news-volume-2-issue-3/education/the-xbios-dosound-function)
     ; now, the time critical stuff is done, and we still have a few cycles for sound...
@@ -1718,8 +1816,8 @@ init_screen:
     move.w #$15,-(sp) ; cursconf xbios 21
     trap #14
     addq.l #6,sp
-    move.w d0,blink_rate
-    move.w d0,curr_blink
+    ;move.w d0,blink_rate
+    ;move.w d0,curr_blink
 
     rts
 
@@ -2517,7 +2615,7 @@ snd_sequence: ; as opposed to the other sequences, the sound is played when the 
     ;dc.l snd_bluesline_dosound
     dc.l music
     dc.w 8  
-    dc.w 3000  
+    dc.w 3200  
     dc.l music
     dc.w 0
 
@@ -4899,10 +4997,10 @@ pal:
     ds.w 16
 
 ; cursor blink rate (in vbl-calls, i.e. 1/50 secs)
-blink_rate:
-    ds.w 1
-curr_blink:
-    ds.w 1
+;blink_rate:
+;    ds.w 1
+;curr_blink:
+;    ds.w 1
 
 spr_cursor:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts

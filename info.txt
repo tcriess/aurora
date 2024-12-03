@@ -1,4 +1,5 @@
 Title: Aurora
-Author: tecer
+Author: tecer (code), ZoltarX (music)
 Compo: ST/E 4kb intro
-Machine: 1040 STF (1MB required)
+Machine: 1040 STF (1MB required) - works on Steem and on Hatari, but not on all wakestates :(
+
