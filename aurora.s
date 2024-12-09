@@ -1,27 +1,7 @@
 ; aurora demo.
 ; 4k Atari ST intro for SillyVenture 2024 WE
     text
-
-; keep timer c (0 = timer c off)
-;keep_c equ 0
-
-; timer registers
-;enable_a        equ     $fffffa07
-;enable_b        equ     $fffffa09
-;mask_a  equ     $fffffa13
 mask_b  equ     $fffffa15
-;a_control       equ     $fffffa19
-;b_control       equ     $fffffa1b
-;cd_control      equ     $fffffa1d
-;a_data  equ     $fffffa1f
-;b_data  equ     $fffffa21
-;vector  equ     $fffffa17
-
-; DEBUG equ 1
-
-; count lines with timer b
-;b_lines equ 228
-
 bot_lines       equ     32
 
 ; into supervisor
@@ -34,29 +14,11 @@ bot_lines       equ     32
     jsr prepare_font
     jsr prepare_scrolltext
 
-; timer c off (conditionally if keep_c == 0)
-    ;ifeq keep_c
     move.b  mask_b.w,-(sp) ; store the old mask register B to the top of the stack 
     bclr.b  #5,mask_b.w ; bit 5 in the interrupt mask register B = timer C on/off
-    ;endc
 
 ; init screen
     jsr init_screen
-
-;; keep timers
-;    lea old,a0
-;    move.b enable_a.w,(a0)+        ; enable A
-;    move.b enable_b.w,(a0)+        ; enable B
-;    move.b mask_a.w,(a0)+          ; mask A
-;    move.b mask_b.w,(a0)+          ; mask B
-;    move.b a_control.w,(a0)+       ; A control
-;    move.b b_control.w,(a0)+       ; B control
-;    move.b cd_control.w,(a0)+      ; C & D control
-;    move.b a_data.w,(a0)+          ; A data
-;    move.b b_data.w,(a0)+          ; B data
-;    move.b vector.w,(a0)+          ; interrupt vector register
-;    move.l $134.w,(a0)+            ; timer A vector
-;    move.l $120.w,(a0)+            ; timer B vector
 
 ; get the (new) screen address 2 (make sure it has the lower byte = 0)
     move.l #scrn2,d0
@@ -74,17 +36,7 @@ bot_lines       equ     32
     addq.l #4,d1 ; planes 3+4 instead of 1+2
     move.l d1,scrollscraddr2 ; we start drawing in scrollscraddr2
     move.l d1,scrollscraddr
-    ;lea screentable2,a3
-    ;lea screenoffsettable,a6
-    ;move.w #28+200+bot_lines,d7
-;.mkscreentable2:
-    ;move.w d0,(a6)+
-    ;move.l d0,(a3)+
-    ;add.l #230,d0
-    ;dbra d7,.mkscreentable2
 
-    ; set the new palette
-    ; movem.l my_pal,d0-d7
     movem.l pal_start,d0-d7
     movem.l d0-d7,$ffff8240.w
 
@@ -109,8 +61,6 @@ bot_lines       equ     32
     move.l d0,scrollscraddr1
 
     ; fill screen with logo
-
-    ; only show 1 logo in the middle
     lea 230*51(a6),a6
     lea logo_data,a5
     move.w #50-1,d0
@@ -125,7 +75,6 @@ bot_lines       equ     32
     move.l (a5)+,(a6)+
     move.l #0,(a6)+
     endr
-    ;lea 22+13*2*4(a6),a6
     lea 20(a6),a6
     lea -13*4(a5),a5
 
@@ -143,39 +92,6 @@ bot_lines       equ     32
 
     dbra d0,.logoloop
 
-
-;    lea logo_data,a5 ; only one quarter, so we fill the screen (logo size is 410 x 202) with 4 copies of a 205 x 101 image
-;    move.w #101-1,d0
-;.logoloop:
-;    rept 13
-;    move.l (a5)+,(a6)+
-;    move.l #0,(a6)+
-;    endr
-;    lea -13*4(a5),a5
-;    rept 13
-;    move.l (a5)+,(a6)+
-;    move.l #0,(a6)+
-;    endr
-;    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
-;    lea 22(a6),a6
-;    dbra d0,.logoloop
-
-;    lea logo_data,a5
-;    move.w #101-1,d0
-;.logoloop2:
-;    rept 13
-;    move.l (a5)+,(a6)+
-;    move.l #0,(a6)+
-;    endr
-;    lea -13*4(a5),a5
-;    rept 13
-;    move.l (a5)+,(a6)+
-;    move.l #0,(a6)+
-;    endr
-;    ; 26*2*4 bytes = 208 bytes, 22 bytes missing
-;    lea 22(a6),a6
-;    dbra d0,.logoloop2
-
     moveq #-1,d0
     ; new screen still in d1
     jsr set_scrn
@@ -189,274 +105,27 @@ bot_lines       equ     32
 .cpyscr:
     move.l (a6)+,(a5)+
     dbra d7,.cpyscr
-
-    ; initially save the sprite background
-    ;lea spr_bg1,a0
-    ;rept 16
-    ;movem.l (a1),d0-d3
-    ;movem.l d0-d3,(a0)
-    ;lea 16(a0),a0
-    ;lea 230(a1),a1
-    ;endr
-
-    ;lea scrollerpalred1,a0
-    ;lea scrollerpalred1w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalred2,a0
-    ;lea scrollerpalred2w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalred3,a0
-    ;lea scrollerpalred3w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalred4,a0
-    ;lea scrollerpalred4w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalgreen1,a0
-    ;lea scrollerpalgreen1w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalgreen2,a0
-    ;lea scrollerpalgreen2w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalgreen3,a0
-    ;lea scrollerpalgreen3w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalgreen4,a0
-    ;lea scrollerpalgreen4w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalblue1,a0
-    ;lea scrollerpalblue1w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalblue2,a0
-    ;lea scrollerpalblue2w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalblue3,a0
-    ;lea scrollerpalblue3w,a1
-    ;jsr prepare_pal
-    ;lea scrollerpalblue4,a0
-    ;lea scrollerpalblue4w,a1
-    ;jsr prepare_pal
-
     lea raw_spr_cursor,a0
     lea spr_cursor,a1
     jsr prepare_sprite
     lea raw_spr_empty,a0
     lea spr_empty,a1
     jsr prepare_sprite
-
     lea raw_spr_butterfly_0,a0
     lea spr_butterfly_0,a1
     jsr prepare_sprite
     lea raw_spr_butterfly_1,a0
     lea spr_butterfly_1,a1
     jsr prepare_sprite
-    ;lea raw_spr_butterfly_2,a0
-    ;lea spr_butterfly_2,a1
-    ;jsr prepare_sprite
-
-    ;lea raw_spr_empty_eye,a0
-    ;lea spr_empty_eye,a1
-    ;jsr prepare_sprite
-    ;lea raw_spr_cursor_legs1,a0
-    ;lea spr_cursor_legs1,a1
-    ;jsr prepare_sprite
-    ;lea raw_spr_cursor_legs2,a0
-    ;lea spr_cursor_legs2,a1
-    ;jsr prepare_sprite
-    ;lea raw_spr_cursor_eye,a0
-    ;lea spr_cursor_eye,a1
-    ;jsr prepare_sprite
     lea raw_spr_qm1,a0
     lea spr_qm1,a1
     jsr prepare_sprite
-    ;lea raw_spr_qm2,a0
-    ;lea spr_qm2,a1
-    ;jsr prepare_sprite
     lea raw_spr_qm3,a0
     lea spr_qm3,a1
     jsr prepare_sprite
-    ;lea raw_spr_em1,a0
-    ;lea spr_em1,a1
-    ;jsr prepare_sprite
-    ;lea raw_spr_em2,a0
-    ;lea spr_em2,a1
-    ;jsr prepare_sprite
-    ;lea raw_spr_em3,a0
-    ;lea spr_em3,a1
-    ;jsr prepare_sprite
+
     jsr init_sprite
-    ; jsr prepare_font
 
-; fill the screen
-;    move.w #screen_len/4-1,d1 ; longword = 4 bytes each
-;fill:
-;    move.l #$80808080,(a6)+ ; #$aaaaaaaa,(a6)+
-;    dbra d1,fill
-
-;; set up timer b
-;    clr.b b_control.w ; timer b off
-;    move.l #my_120,$120.w
-
-;; set timer b mask on
-;    bset.b #0,mask_a.w
-;    bset.b #0,enable_a.w
-
-* initialise sound chip
-    ;bra end_init_mus 
-;   move.w	#$8800,a0
-
-;	move.l	#init_mus,a2
-
-;do_init_mus:
-;	move.w	(a2)+,d0
-;	bmi.s	end_init_mus
-
-;	movep.w	d0,0(a0)
-;	bra.s	do_init_mus
-
-;init_mus:
-;	dc.w	$0000
-;	dc.w	$0100
-;	dc.w	$0200
-;	dc.w	$0300
-;	dc.w	$0400
-;	dc.w	$0500
-;	dc.w	$0600
-;	dc.b	$07,%01111111
-;	dc.w	$0d00
-;
-;	dc.w	-1
-
-;end_init_mus:
-
-snd_keyclick macro
-    lea.l keyclick,a6   ; 12
-    move.l	#nos,a5		; 12 and numbers for chip
-
-	move.b	(a6)+,2(a5)	; 16 put data into correct positions
-	move.b	(a6)+,6(a5) ; 16
-	move.b	(a6)+,$a(a5) ; 16
-	move.b	(a6)+,$e(a5) ; 16
-	move.b	(a6)+,$12(a5) ; 16
-	move.b	(a6)+,$16(a5) ; 16
-	move.b	(a6)+,$1a(a5) ; 16
-	move.b	(a6)+,$1e(a5) ; 16
-	move.b	(a6)+,$22(a5) ; 16
-	move.b	(a6)+,$26(a5) ; 16
-	move.b	(a6)+,$2a(a5) ; 16
-
-    ; methinks that the following only works because of the
-    ; so-called "shadow registers", i.e. register ff8800 is
-    ; repeated from ff8800 to ff88ff or so, which means
-    ; it is ok to put the complete data into ff8800
-    ; but be aware that this won't work with falcon/tt,
-    ; because there are no shadow registers!
-    movem.l	(a5),a0-a3/d1-d7	; 100 slap all data into sound chip
-	movem.l	a0-a3/d1-d7,$ffff8800.w ; 100 total of 11 long words (44 bytes!)
-    endm ; destroys a0-a3,a5-a6,d1-d7, exactly 400 cycles
-
-snd_reset macro
-    lea.l sndrs,a6   ; 12
-    move.l	#nos,a5		; 12 and numbers for chip
-
-	move.b	(a6)+,2(a5)	; 16 put data into correct positions
-	move.b	(a6)+,6(a5) ; 16
-	move.b	(a6)+,$a(a5) ; 16
-	move.b	(a6)+,$e(a5) ; 16
-	move.b	(a6)+,$12(a5) ; 16
-	move.b	(a6)+,$16(a5) ; 16
-	move.b	(a6)+,$1a(a5) ; 16
-	move.b	(a6)+,$1e(a5) ; 16
-	move.b	(a6)+,$22(a5) ; 16
-	move.b	(a6)+,$26(a5) ; 16
-	move.b	(a6)+,$2a(a5) ; 16
-
-    ; methinks that the following only works because of the
-    ; so-called "shadow registers", i.e. register ff8800 is
-    ; repeated from ff8800 to ff88ff or so, which means
-    ; it is ok to put the complete data into ff8800
-    ; but be aware that this won't work with falcon/tt,
-    ; because there are no shadow registers!
-    movem.l	(a5),a0-a3/d1-d7	; 100 slap all data into sound chip
-	movem.l	a0-a3/d1-d7,$ffff8800.w ; 100 total of 11 long words (44 bytes!)
-    endm ; destroys a0-a3,a5-a6,d1-d7, exactly 400 cycles
-    
-snd_keyclick2 macro
-    move.b #$00,$ffff8800.w ; register 0 (chan 1)
-    move.b #$3B,$ffff8802.w
-    move.b #$01,$ffff8800.w ; register 1 (chan 1)
-    move.b #$00,$ffff8802.w
-    move.b #$02,$ffff8800.w ; register 2 (chan 2)
-    move.b #$00,$ffff8802.w
-    move.b #$03,$ffff8800.w ; register 3 (chan 2)
-    move.b #$00,$ffff8802.w
-    move.b #$04,$ffff8800.w ; register 4 (chan 3)
-    move.b #$00,$ffff8802.w
-    move.b #$05,$ffff8800.w ; register 5 (chan 3)
-    move.b #$00,$ffff8802.w
-    move.b #$06,$ffff8800.w ; register 6 (noise)
-    move.b #$00,$ffff8802.w
-    move.b #$07,$ffff8800.w ; register 7 (chan select)
-    move.b #$FE,$ffff8802.w
-    move.b #$08,$ffff8800.w ; register 8 (amplitude chan 1)
-    move.b #$10,$ffff8802.w
-    move.b #$09,$ffff8800.w ; register 9 (amplitude chan 2)
-    move.b #$00,$ffff8802.w
-    move.b #$0a,$ffff8800.w ; register 10 (amplitude chan 3)
-    move.b #$00,$ffff8802.w
-    move.b #$0B,$ffff8800.w ; register 11 (envelope)
-    move.b #$80,$ffff8802.w ; bit 4 set means: use envelope
-    move.b #$0C,$ffff8800.w ; register 12
-    move.b #$01,$ffff8802.w
-    move.b #$0D,$ffff8800.w ; register 13
-    move.b #$03,$ffff8802.w
-    endm
-
-    ; try to shift one line by 1 byte in ~400 cycles
-    ; only 1 plane
-    ; 1 line = 230 bytes total
-    ;rept 28
-    ;move.b 1(a0),(a0)+
-    ;move.b 7(a0),(a0)+
-    ;addq.l #6,a0
-    ;endr
-
-    ;next try: shift by 1 word
-    ;rept 14
-    ;move.w 8(a0),(a0)+
-    ;addq #6,a0
-    ;endr ; 336 cycles
-
-
-
-;; make sure the screen address is in a1
-;    movea.l 128*4(a1),a6
-;    lea.l scrolltable,a1
-    
-;    movea.l tpos,a0
-;    moveq #0,d2
-    
-;    moveq #20-1,d1
-;.l2             ; MOVEA.L (A1)+,A2    ;A2=DESTINATION
-;    add.w (a1)+,d2
-;    lea.l (a6,d2.w),a2 ; screen addr
-;    movea.l (a0)+,a3    ;A3=SOURCE
-;    ;rept 36
-;    move.b (a3)+,(a2) ; 12 (2/1) 2
-;    ;lea 160(a2),a2 ; 8 (2/0) 4
-;    ;endr
-;    add.w (a1)+,d2
-;    addq #1,d2
-;    lea.l (a6,d2.w),a2 ; screen addr
-;    movea.l (a0)+,a3
-;    ;rept 36
-;    move.b (a3)+,(a2)
-;    ;lea 160(a2),a2
-;    ;endr
-;    addq #7,d2
-;    dbf d1,.l2
-;    addq.l #4,tpos          ;INCREASE POSITION IN TEXT.
-
-    ;jsr music+0
 
 ; set up vbl (will initialize timer b every time)
     move.l $70.w,-(sp) ; store old vbl on top of stack
@@ -471,23 +140,6 @@ snd_keyclick2 macro
 
 ; restore vbl
     move.l (sp)+,$70.w
-
-    ;jsr music+4
-
-;; restore timers
-;    lea old,a0
-;    move.b  (a0)+,enable_a.w        ; enable A
-;    move.b  (a0)+,enable_b.w        ; enable B
-;    move.b  (a0)+,mask_a.w          ; mask A
-;    move.b  (a0)+,mask_b.w          ; mask B
-;    move.b  (a0)+,a_control.w       ; A control
-;    move.b  (a0)+,b_control.w       ; B control
-;    move.b  (a0)+,cd_control.w      ; C & D control
-;    move.b  (a0)+,a_data.w          ; A data
-;    move.b  (a0)+,b_data.w          ; B data
-;    move.b  (a0)+,vector.w          ; interrupt vector register
-;    move.l  (a0)+,$134.w            ; timer A vector
-;    move.l  (a0)+,$120.w            ; timer B vector
 
 ; restore screen
     jsr restore
@@ -613,12 +265,7 @@ my_70:
 
 ; it seems those 2 cycles are totally ok to go up or down (actually even a few more or less are ok at this stage)
 
-; if there is no vbi counter:
-;    rept 4263
-;    nop
-;    endr ; total of 4263 nops
-
-; optional code in the spare cycles start
+; code in the spare cycles start
 
 ; first, toggle the screen addresses
     ; A - toggle the screen bit
@@ -1072,72 +719,7 @@ my_70:
     ; J: 156c (39 nops)
     
 
-;; sprite code
-;    lea spr_cursor,a3 ; 2 mask + 4 planes, 16 lines, 16 shifts
-;    ; todo: pick the correct shift
-;    lea spr_bg,a5 ; background buffer 16*16 bytes
-;    movea.l spr_position_addr,a6 ; screen address
-
-;    rept 16
-;; restore bg
-;    movem.l (a5),d0-d3
-;    movem.l d0-d3,(a6)
-;; todo: adjust screen addr to new position
-;    movem.l (a6),d0-d3
-;    move.l d0,(a5)+
-;    move.l d1,(a5)+
-;    move.l d2,(a5)+
-;    move.l d3,(a5)+ ; this seems faster than the "movem + add" version
-;    ;movem.l d0-d3,(a5)
-;    ;add.l #16,a5 ; next line
-;    movem.l (a3)+,d0-d3/a0-a1 ; 2 mask + 4 planes
-;    movem.l (a6),d4-d7 ; 4 planes
-;    and.l d0,d4 ; plane 1+2 left
-;    and.l d0,d5 ; plane 3+4 left
-;    and.l d1,d6 ; plane 1+2 right
-;    and.l d1,d7 ; plane 3+4 right
-;    or.l d2,d4
-;    or.l d3,d5
-;    move.l a0,d0
-;    or.l d0,d6
-;    move.l a1,d0
-;    or.l d0,d7
-;    movem.l d4-d7,(a6)
-;    lea.l 230(a6),a6
-;    endr ; 6208 cycles
-
-;    lea spr_cursor_mask,a4
-;    lea spr_cursor_data,a3
-;    lea spr_bg,a5
-;    movea.l spr_position_addr,a6
-;
-;    rept 16
-;; restore bg
-;    move.l (a5),(a6)
-;    move.l 4(a5),8(a6)
-;; store bg
-;    move.l (a6),d0
-;    move.l 8(a6),d1
-;    move.l d0,(a5)+
-;    move.l d1,(a5)+
-;    ; unfortunately, movem.l d0-d1,(a5)+ is not supported
-;; mask
-;    movem.l (a4)+,d2-d3
-;    and.l d2,d0
-;    and.l d3,d1
-;; sprite data
-;    movem.l (a3)+,d2-d3
-;    or.l d2,d0
-;    or.l d3,d1
-;    move.l d0,(a6)
-;    move.l d1,8(a6)
-
-;    lea.l 230(a6),a6 ; next line
-;    endr ; 3584 cycles
-
-; optional code end - 6400+12+12+20 cycles = 6444 cycles = 1611 nops
-    ; add the remaining cycles to a total of 4263 nops
-    ;dcb.w 4263,$4e71
+; *** all preparation code before the first visible line done ***, still a few cycles to burn here (but that needs to be calculated carefully!)
 
     ; actually, it seems more stable with a total of 4267 nops
     ; dcb.w 4192,$4e71 ; A-E
@@ -1147,7 +729,7 @@ my_70:
     ;dcb.w 2499,$4e71 ; A-I, without E2-G2
     ;dcb.w 901,$4e71 ; A-I, with E2-G2
     ;dcb.w 862,$4e71 ; A-J, with E2-G2
-    ;dcb.w 870,$4e71 ; A-J, with E2-G2, witho ut D
+    ;dcb.w 870,$4e71 ; A-J, with E2-G2, without D
     dcb.w 798,$4e71 ; A-J, with E2-G2, without D
 
 ; to 60Hz
@@ -1204,32 +786,6 @@ my_70:
     movea.l scrollscraddr,a6 ; put the start address of the first line of the scroller in a6
     move.l a6,a5
     lea 216(a5),a5 ; end of the line, this is where we put the new char data
-
-;    ; we are in the first line, we'll do some initialization stuff for the scroller here
-;    movea.l scrollscraddr,a6 ; put the start address of the first line of the scroller in a6
-;    move.l a6,a5
-;    lea 216(a5),a5 ; end of the line, this is where we put the new char data
-;    lea font,a4 ; start of font
-;    move.l scrollpos,a3
-;    move.w (a3),d0
-;
-;    bge.s .contscroll
-;
-;    lea scrolltextbuffer,a3
-;    move.w #0,d0
-;    bra.s .contscroll2
-;.contscroll:
-;    addq.l #2,a3
-;    dcb.w   5,$4e71 ; 5*4 = 20 cycles
-;.contscroll2:
-;    move.l a3,scrollpos
-;    add.w d0,a4
-;    ;lea 0(a4,d0.w),a4 ; not 12! it is 16 cycles!
-;    move.l font_addr1,a3
-;    add.w d0,a3
-;    move.l font_addr2,a4
-;    add.w d0,a4
-    ; move.l a4,a3
 
     ; a6: scroller start, used to do the byte shifting
     ; a5: start of the rightmost word to feed in new data
@@ -1496,7 +1052,6 @@ my_70:
     ;dcb.w   89,$4e71 ; 89*4 = 356 cycles
     dcb.w   61,$4e71
     move.l current_scrollerpal_sequence_struct+2,a5
-    ;lea scrollerpals,a5 ; 12c
     move.l (a5)+,a2 ; 12c
     move.w #$8240,a6 ; 8c
     movem.l (a2),d0-d2/d5-d7/a3-a4 ; 76c
@@ -1555,18 +1110,6 @@ my_70:
 * LEFT HAND BORDER!
     move.b  d3,(a1)         ; to monochrome 8 cycles
     move.b  d4,(a1)         ; to lo-res 8 cycles
-
-    ;dcb.w   43,$4e71
-    ;move.l  #$ffff8240,a3
-    ;lea     scrollerpalred1,a4
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
-    ;move.l (a4)+,(a3)+
 
     ; dcb.w   89,$4e71 ; 89*4 = 356 cycles
     dcb.w   57,$4e71
@@ -1735,7 +1278,6 @@ my_70:
 
 .nosound:
     move.l scrollpos,a2
-    ;move.w -2(a2),d5
     move.w (a2),d4
     bge.s .contscroll3
 
@@ -1822,14 +1364,14 @@ init_screen:
     rts
 
 restore:
-* restore screen to how it was!
-* first the res & screen address
+; restore screen to how it was!
+; first the res & screen address
     
     move.w  res,d0
     move.l  logbase,d1
     bsr     set_scrn
     
-* now the old palette back again!
+; now the old palette back again!
     lea     pal,a0
     move.l  #$ffff8240,a1
 
@@ -1964,8 +1506,6 @@ init_sprite:
     lea current_ani_sprite_struct,a1
     move.w 0(a2),0(a1) ; delay
     move.l 2(a2),2(a1) ; sprite data address
-    ;move.w #sprite_size_per_shift*0,6(a1) ; shift 0
-    ;move.w #230*(28-4)+24,8(a1) ; offset to screen
     move.w d0,8(a1) ; screen offset
     move.w d1,6(a1) ; sprite shift offset
     add.w 6(a2),a2 ; 6(a2) is the offset in the animated sprite definition to the next sprite (can be negative to point to the beginning or so)
@@ -1991,8 +1531,6 @@ init_sprite:
     lea current_ani_sprite_struct2,a1
     move.w 0(a2),0(a1) ; delay
     move.l 2(a2),2(a1) ; sprite data address
-    ;move.w #sprite_size_per_shift*0,6(a1) ; shift 0
-    ;move.w #230*(28-4)+24,8(a1) ; offset to screen
     move.w d0,8(a1) ; screen offset
     move.w d1,6(a1) ; sprite shift offset
     add.w 6(a2),a2 ; 6(a2) is the offset in the animated sprite definition to the next sprite (can be negative to point to the beginning or so)
@@ -2014,20 +1552,6 @@ init_sprite:
     move.l #0,(a2)+
     endr
 
-    ;move.l screen,a0
-    ;lea spr_bg1,a1
-    ;lea spr_bg2,a2
-    ;move.l screen1,(a1)+
-    ;move.l screen2,(a2)+
-    ;rept 16
-    ;movem.l (a0),d0-d3
-    ;movem.l d0-d3,(a1)
-    ;movem.l d0-d3,(a2)
-    ;lea 16(a1),a1
-    ;lea 16(a2),a2
-    ;lea 230(a0),a0
-    ;endr
-
     lea spr_bg3,a1
     lea spr_bg4,a2
     move.l screen1,(a1)+ ; upper left border, we don't care
@@ -2043,20 +1567,6 @@ init_sprite:
     move.l #0,(a2)+
     endr
 
-    ;move.l screen,a0
-    ;lea spr_bg3,a1
-    ;lea spr_bg4,a2
-    ;move.l screen1,(a1)+
-    ;move.l screen2,(a2)+
-    ;rept 16
-    ;movem.l (a0),d0-d3
-    ;movem.l d0-d3,(a1)
-    ;movem.l d0-d3,(a2)
-    ;lea 16(a1),a1
-    ;lea 16(a2),a2
-    ;lea 230(a0),a0
-    ;endr
-
     ; init also the current pal and the current snd
     lea current_pal_sequence_struct,a0
     lea pal_sequence,a1
@@ -2069,14 +1579,11 @@ init_sprite:
     lea current_snd_sequence_struct,a0
     lea snd_sequence,a1
     move.w (a1),(a0) ; delay
-    ;move.l 2(a1),2(a0)
     move.l #0,2(a0)
-    ;add.w 6(a1),a1
     move.l a1,6(a0)
 
     lea current_dosound_sequence_struct,a0
     move.w #0,(a0) ; counter (different from other counters!)
-    ;move.l 2(a1),2(a0) ; address of first entry of dosound
     move.l #0,2(a0)
     move.w #0,6(a0) ; temp var + filler
 
@@ -2084,9 +1591,7 @@ init_sprite:
     lea scrollerpal_sequence,a1
     move.w (a1),(a0) ; delay
     lea scrollerpals,a2
-    ;add.w 2(a1),a2
     move.l a2,2(a0)
-    ;;move.l 2(a1),2(a0)
     add.w 6(a1),a1
     move.l a1,6(a0)
 
@@ -2278,10 +1783,7 @@ prepare_font:
 
     add.l #16,a1
     dbra d7,.oneline
-    ;addq #1,a2
-    ;add.l #256,a1
     add.l #768,a1
-    ;move.l a2,a0
     dbra d6,.onechar
 
     ; next: create the 8-bit shifted variants after the regular font
@@ -2337,24 +1839,6 @@ pal_sequence:
     dc.w 1000 ; delay
     dc.l pal_start ; address of the new palette
     dc.w 8 ; offset to the next entry
-    ;dc.w 5
-    ;dc.l pal_border1 ; address of the new palette
-    ;dc.w 8 ; offset to the next entry
-    ;dc.w 5
-    ;dc.l pal_border2 ; address of the new palette
-    ;dc.w 8 ; offset to the next entry
-    ;dc.w 180 ; delay
-    ;dc.l pal_start ; address of the new palette
-    ;dc.w 8 ; offset to the next entry
-    ;dc.w 5
-    ;dc.l pal_border1 ; address of the new palette
-    ;dc.w 8 ; offset to the next entry
-    ;dc.w 5
-    ;dc.l pal_border2 ; address of the new palette
-    ;dc.w 8 ; offset to the next entry
-    ;dc.w 100 ; delay
-    ;dc.l pal_start ; address of the new palette
-    ;dc.w 8 ; offset to the next entry
     dc.w 100 ; delay
     dc.l pal_black ; address of the new palette
     dc.w 8 ; offset to the next entry
@@ -2606,13 +2090,8 @@ snd_sequence: ; as opposed to the other sequences, the sound is played when the 
     dc.w 2
     dc.l snd_crash_dosound
     dc.w 8
-
-    ;dc.w 50
-    ;dc.l music
-    ;;dc.l snd_bluesline_dosound
-    ;dc.w 8    
+  
     dc.w 10
-    ;dc.l snd_bluesline_dosound
     dc.l music
     dc.w 8  
     dc.w 3200  
@@ -2954,8 +2433,6 @@ spr_sequence:
     dc.w sprite_size_per_shift*0 ; 8w: sprite shift address offset
     dc.w 24 ; 10w: offset to next entry in sequence (0 = repeat forever, 12 = next entry)
 
-    ; include 'gen_lissajous.s'
-
 spr_sequence2:
     dc.w 700 ; 0w: delay (1000 = 20s, 500 = 10s, ...)
     dc.l ani_spr_cursor ; 2l: animated sprite definition
@@ -2982,23 +2459,9 @@ ani_spr_qm:
     dc.w 25
     dc.l spr_qm1
     dc.w 8
-    ;dc.w 15
-    ;dc.l spr_qm2
-    ;dc.w 8
     dc.w 25
     dc.l spr_qm3
     dc.w -8
-
-;ani_spr_em:
-;    dc.w 25
-;    dc.l spr_em1
-;    dc.w 8
-;    dc.w 15
-;    dc.l spr_em2
-;    dc.w 8
-;    dc.w 10
-;    dc.l spr_em3
-;    dc.w -16
 
 ani_spr_empty:
     dc.w 10
@@ -3012,9 +2475,6 @@ ani_spr_butterfly:
     dc.w 10
     dc.l spr_butterfly_1
     dc.w -8
-    ;dc.w 10
-    ;dc.l spr_butterfly_2
-    ;dc.w -2*8
 
 raw_sprites:
 ; 0
@@ -3037,24 +2497,6 @@ raw_spr_empty:
     dc.w $FFFF,$0000,$0000,$0000,$0000
 
     include 'gen_butterfly.s'
-
-;raw_spr_empty_eye:
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FF9F,$0060,$0060,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
 
 ; 1
 raw_spr_cursor:
@@ -3083,24 +2525,6 @@ raw_spr_cursor:
     dc.w $FFFF,$0000,$0000,$0000,$0000
     endif
 
-;raw_spr_cursor_eye:
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F06F,$0FF0,$0F90,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
 raw_spr_qm1: ; question mark small 8x8
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
@@ -3119,60 +2543,6 @@ raw_spr_qm1: ; question mark small 8x8
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
 
-;raw_spr_qm2: ; question mark 10x10
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $F83F,$07C0,$07C0,$0000,$0000
-;    dc.w $F18F,$0E70,$0E70,$0000,$0000
-;    dc.w $FF8F,$0670,$0070,$0000,$0000
-;    dc.w $FF8F,$0070,$0070,$0000,$0000
-;    dc.w $FF3F,$00C0,$00C0,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_qm2: ; question mark 12x12
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $F81F,$07E0,$07E0,$0000,$0000
-;    dc.w $E38F,$1C70,$1C70,$0000,$0000
-;    dc.w $E38F,$1C70,$1C70,$0000,$0000
-;    dc.w $FF8F,$0070,$0070,$0000,$0000
-;    dc.w $FF1F,$00E0,$00E0,$0000,$0000
-;    dc.w $FF1F,$00E0,$00E0,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_qm4: ; question mark 14x14
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $F01F,$0FE0,$0FE0,$0000,$0000
-;    dc.w $F01F,$0FE0,$0FE0,$0000,$0000
-;    dc.w $E3C7,$1C38,$1C38,$0000,$0000
-;    dc.w $FFC7,$0038,$0038,$0000,$0000
-;    dc.w $FFC7,$0038,$0038,$0000,$0000
-;    dc.w $FF1F,$00E0,$00E0,$0000,$0000
-;    dc.w $FF1F,$00E0,$00E0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
 raw_spr_qm3: ; question mark 16x16
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
     dc.w $F00F,$0FF0,$0FF0,$0000,$0000
@@ -3190,96 +2560,6 @@ raw_spr_qm3: ; question mark 16x16
     dc.w $FC3F,$03C0,$03C0,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
     dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_em1: ; exclamation mark 8x8
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_em2: ; exclamation mark 12x12
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $F81F,$07E0,$07E0,$0000,$0000
-;    dc.w $F81F,$07E0,$07E0,$0000,$0000
-;    dc.w $F81F,$07E0,$07E0,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FC7F,$0380,$0380,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_em3: ; exclamation mark 16x16
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FC3F,$03C0,$03C0,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_cursor_legs1:
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $FEFF,$0100,$0100,$0000,$0000
-;    dc.w $FEFF,$0100,$0100,$0000,$0000
-;    dc.w $FE7F,$0180,$0180,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-
-;raw_spr_cursor_legs2:
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $F00F,$0FF0,$0FF0,$0000,$0000
-;    dc.w $FEBF,$0140,$0140,$0000,$0000
-;    dc.w $FEBF,$0140,$0140,$0000,$0000
-;    dc.w $FE1F,$01E0,$01E0,$0000,$0000
-;    dc.w $FFFF,$0000,$0000,$0000,$0000
 
 mouse_params:
     dc.b    0,1,1,1
@@ -3305,7 +2585,6 @@ pal_start: ; default palette. we start with a white bg, plane 1+2 are for the ba
     dc.w $0333 ; 6 scroller border left
     dc.w $0333 ; 7 scroller border left
     dc.w $0406 ; 8 scroller border right
-    ;dc.w $0740 ; 8 scroller border right
     dc.w $0547 ; 9 scroller border right
     dc.w $0272 ; 10 scroller border right
     dc.w $0222 ; 11 scroller border right
@@ -3337,9 +2616,6 @@ pal_black: ; default palette. we start with a white bg, plane 1+2 are for the ba
     dc.w $0406 ; 8 scroller border right
     dc.w $0547 ; 9 scroller border right
     dc.w $0272 ; 10 scroller border right
-;    dc.w $0333 ; 8 scroller border right
-;    dc.w $0333 ; 9 scroller border right
-;    dc.w $0333 ; 10 scroller border right
     dc.w $0333 ; 11 scroller border right
     dc.w $0444 ; 12 scroller main color
     dc.w $0444 ; 13 scroller main color
@@ -3370,9 +2646,6 @@ pal_black1: ; default palette. we start with a white bg, plane 1+2 are for the b
     dc.w $0406 ; 8 scroller border right
     dc.w $0547 ; 9 scroller border right
     dc.w $0272 ; 10 scroller border right
-;    dc.w $0333 ; 8 scroller border right
-;    dc.w $0333 ; 9 scroller border right
-;    dc.w $0333 ; 10 scroller border right
     dc.w $0333 ; 11 scroller border right
     dc.w $0444 ; 12 scroller main color
     dc.w $0444 ; 13 scroller main color
@@ -3403,9 +2676,6 @@ pal_black2: ; default palette. we start with a white bg, plane 1+2 are for the b
     dc.w $0406 ; 8 scroller border right
     dc.w $0547 ; 9 scroller border right
     dc.w $0272 ; 10 scroller border right
-;    dc.w $0333 ; 8 scroller border right
-;    dc.w $0333 ; 9 scroller border right
-;    dc.w $0333 ; 10 scroller border right
     dc.w $0333 ; 11 scroller border right
     dc.w $0444 ; 12 scroller main color
     dc.w $0444 ; 13 scroller main color
@@ -3422,8 +2692,6 @@ pal_black3: ; default palette. we start with a white bg, plane 1+2 are for the b
     else
     dc.w $750
     dc.w $730
-    ;dc.w $0501 ; 1 initial border color (invisible, change to 777 later) (further out)
-    ;dc.w $0302 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
     endif
     if DEBUG
     dc.w $0700 ; 3 inital cursor color (black)
@@ -3437,9 +2705,6 @@ pal_black3: ; default palette. we start with a white bg, plane 1+2 are for the b
     dc.w $0406 ; 8 scroller border right
     dc.w $0547 ; 9 scroller border right
     dc.w $0272 ; 10 scroller border right
-;    dc.w $0333 ; 8 scroller border right
-;    dc.w $0333 ; 9 scroller border right
-;    dc.w $0333 ; 10 scroller border right
     dc.w $0333 ; 11 scroller border right
     dc.w $0444 ; 12 scroller main color
     dc.w $0444 ; 13 scroller main color
@@ -3542,13 +2807,8 @@ pal_border4: ; default palette. we start with a white bg, plane 1+2 are for the 
     dc.w $0000 ; 14 scroller main color
     dc.w $0000 ; 15 scroller main color
 
-    ;dc.w $0000,$0666,$0700,$0070,$0007,$0770,$0077,$0707
-    ;dc.w $0777,$0500,$0050,$0005,$0550,$0055,$0505,$0555
-    ; incbin 'spr_pal.dat'
-
 scrollerpal_sequence:
-    dc.w 1300 ;1600
-    ;dc.w 0 ; offset
+    dc.w 1300
     dc.l 0 ; increment
     dc.w 8
 
@@ -3915,104 +3175,6 @@ scrollerpals_2: ; 64 palettes
     dc.l scrollerpalred1
     dc.l scrollerpalred1
 
-;scrollerpalsw: ; 64 palettes
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred4w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred3w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred2w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalred1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue4w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue3w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue2w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalblue1w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen4w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen3w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen2w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen1w
-;    dc.l scrollerpalgreen1w
-
 scrollerpalred1:
     dc.w $0611 ; 0 %0000 bg
     dc.w $0611 ; 1 initial border color (invisible, change to 777 later) (further out)
@@ -4122,28 +3284,6 @@ scrollerpalblue1:
     dc.w $0211 ; 13 scroller main color
     dc.w $0211 ; 14 scroller main color
     dc.w $0211 ; 15 scroller main color
-
-;scrollerpalblue1:
-;    dc.w $0116 ; 0 %0000 bg
-;    dc.w $0116 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0116 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0003 ; 4 scroller border left
-;    dc.w $0003 ; 5 scroller border left
-;    dc.w $0003 ; 6 scroller border left
-;    dc.w $0003 ; 7 scroller border left
-;    dc.w $0002 ; 8 scroller border right
-;    dc.w $0002 ; 9 scroller border right
-;    dc.w $0002 ; 10 scroller border right
-;    dc.w $0002 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
         
 scrollerpalblue2:
     dc.w $0740 ; 0 %0000 bg
@@ -4166,28 +3306,6 @@ scrollerpalblue2:
     dc.w $0322 ; 13 scroller main color
     dc.w $0322 ; 14 scroller main color
     dc.w $0322 ; 15 scroller main color
-
-;scrollerpalblue2:
-;    dc.w $0117 ; 0 %0000 bg
-;    dc.w $0117 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0117 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0004 ; 4 scroller border left
-;    dc.w $0004 ; 5 scroller border left
-;    dc.w $0004 ; 6 scroller border left
-;    dc.w $0004 ; 7 scroller border left
-;    dc.w $0003 ; 8 scroller border right
-;    dc.w $0003 ; 9 scroller border right
-;    dc.w $0003 ; 10 scroller border right
-;    dc.w $0003 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
     
 scrollerpalblue3:
     dc.w $0750 ; 0 %0000 bg
@@ -4211,28 +3329,6 @@ scrollerpalblue3:
     dc.w $0433 ; 14 scroller main color
     dc.w $0433 ; 15 scroller main color
 
-;scrollerpalblue3:
-;    dc.w $0107 ; 0 %0000 bg
-;    dc.w $0107 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0107 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0005 ; 4 scroller border left
-;    dc.w $0005 ; 5 scroller border left
-;    dc.w $0005 ; 6 scroller border left
-;    dc.w $0005 ; 7 scroller border left
-;    dc.w $0004 ; 8 scroller border right
-;    dc.w $0004 ; 9 scroller border right
-;    dc.w $0004 ; 10 scroller border right
-;    dc.w $0004 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
-
 scrollerpalblue4:
     dc.w $0760 ; 0 %0000 bg
     dc.w $0760 ; 1 initial border color (invisible, change to 777 later) (further out)
@@ -4254,434 +3350,6 @@ scrollerpalblue4:
     dc.w $0544 ; 13 scroller main color
     dc.w $0544 ; 14 scroller main color
     dc.w $0544 ; 15 scroller main color
-    
-;scrollerpalblue4:
-;    dc.w $0007 ; 0 %0000 bg
-;    dc.w $0007 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0007 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0006 ; 4 scroller border left
-;    dc.w $0006 ; 5 scroller border left
-;    dc.w $0006 ; 6 scroller border left
-;    dc.w $0006 ; 7 scroller border left
-;    dc.w $0005 ; 8 scroller border right
-;    dc.w $0005 ; 9 scroller border right
-;    dc.w $0005 ; 10 scroller border right
-;    dc.w $0005 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
-
-;scrollerpalgreen1:
-;    dc.w $0161 ; 0 %0000 bg
-;    dc.w $0161 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0161 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0030 ; 4 scroller border left
-;    dc.w $0030 ; 5 scroller border left
-;    dc.w $0030 ; 6 scroller border left
-;    dc.w $0030 ; 7 scroller border left
-;    dc.w $0020 ; 8 scroller border right
-;    dc.w $0020 ; 9 scroller border right
-;    dc.w $0020 ; 10 scroller border right
-;    dc.w $0020 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-            
-;scrollerpalgreen2:
-;    dc.w $0171 ; 0 %0000 bg
-;    dc.w $0171 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0171 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0040 ; 4 scroller border left
-;    dc.w $0040 ; 5 scroller border left
-;    dc.w $0040 ; 6 scroller border left
-;    dc.w $0040 ; 7 scroller border left
-;    dc.w $0030 ; 8 scroller border right
-;    dc.w $0030 ; 9 scroller border right
-;    dc.w $0030 ; 10 scroller border right
-;    dc.w $0030 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-        
-;scrollerpalgreen3:
-;    dc.w $0171 ; 0 %0000 bg
-;    dc.w $0171 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0171 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0050 ; 4 scroller border left
-;    dc.w $0050 ; 5 scroller border left
-;    dc.w $0050 ; 6 scroller border left
-;    dc.w $0050 ; 7 scroller border left
-;    dc.w $0040 ; 8 scroller border right
-;    dc.w $0040 ; 9 scroller border right
-;    dc.w $0040 ; 10 scroller border right
-;    dc.w $0040 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-    
-        
-;scrollerpalgreen4:
-;    dc.w $0070 ; 0 %0000 bg
-;    dc.w $0070 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0070 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0060 ; 4 scroller border left
-;    dc.w $0060 ; 5 scroller border left
-;    dc.w $0060 ; 6 scroller border left
-;    dc.w $0060 ; 7 scroller border left
-;    dc.w $0050 ; 8 scroller border right
-;    dc.w $0050 ; 9 scroller border right
-;    dc.w $0050 ; 10 scroller border right
-;    dc.w $0050 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-
-;scrollerpalred1w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0300 ; 4 scroller border left
-;    dc.w $0300 ; 5 scroller border left
-;    dc.w $0300 ; 6 scroller border left
-;    dc.w $0300 ; 7 scroller border left
-;    dc.w $0200 ; 8 scroller border right
-;    dc.w $0200 ; 9 scroller border right
-;    dc.w $0200 ; 10 scroller border right
-;    dc.w $0200 ; 11 scroller border right
-;    dc.w $0401 ; 12 scroller main color
-;    dc.w $0401 ; 13 scroller main color
-;    dc.w $0401 ; 14 scroller main color
-;    dc.w $0401 ; 15 scroller main color
-
-;scrollerpalred2w:
-;   dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0400 ; 4 scroller border left
-;    dc.w $0400 ; 5 scroller border left
-;    dc.w $0400 ; 6 scroller border left
-;    dc.w $0400 ; 7 scroller border left
-;    dc.w $0300 ; 8 scroller border right
-;    dc.w $0300 ; 9 scroller border right
-;    dc.w $0300 ; 10 scroller border right
-;    dc.w $0300 ; 11 scroller border right
-;    dc.w $0401 ; 12 scroller main color
-;    dc.w $0401 ; 13 scroller main color
-;    dc.w $0401 ; 14 scroller main color
-;    dc.w $0401 ; 15 scroller main color
-    
-;scrollerpalred3w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0500 ; 4 scroller border left
-;    dc.w $0500 ; 5 scroller border left
-;    dc.w $0500 ; 6 scroller border left
-;    dc.w $0500 ; 7 scroller border left
-;    dc.w $0400 ; 8 scroller border right
-;    dc.w $0400 ; 9 scroller border right
-;    dc.w $0400 ; 10 scroller border right
-;    dc.w $0400 ; 11 scroller border right
-;    dc.w $0401 ; 12 scroller main color
-;    dc.w $0401 ; 13 scroller main color
-;    dc.w $0401 ; 14 scroller main color
-;    dc.w $0401 ; 15 scroller main color
-    
-;scrollerpalred4w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0600 ; 4 scroller border left
-;    dc.w $0600 ; 5 scroller border left
-;    dc.w $0600 ; 6 scroller border left
-;    dc.w $0600 ; 7 scroller border left
-;    dc.w $0500 ; 8 scroller border right
-;    dc.w $0500 ; 9 scroller border right
-;    dc.w $0500 ; 10 scroller border right
-;    dc.w $0500 ; 11 scroller border right
-;    dc.w $0401 ; 12 scroller main color
-;    dc.w $0401 ; 13 scroller main color
-;    dc.w $0401 ; 14 scroller main color
-;    dc.w $0401 ; 15 scroller main color
-    
-;scrollerpalblue1w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0003 ; 4 scroller border left
-;    dc.w $0003 ; 5 scroller border left
-;    dc.w $0003 ; 6 scroller border left
-;    dc.w $0003 ; 7 scroller border left
-;    dc.w $0002 ; 8 scroller border right
-;    dc.w $0002 ; 9 scroller border right
-;    dc.w $0002 ; 10 scroller border right
-;    dc.w $0002 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
-            
-;scrollerpalblue2w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0004 ; 4 scroller border left
-;    dc.w $0004 ; 5 scroller border left
-;    dc.w $0004 ; 6 scroller border left
-;    dc.w $0004 ; 7 scroller border left
-;    dc.w $0003 ; 8 scroller border right
-;    dc.w $0003 ; 9 scroller border right
-;    dc.w $0003 ; 10 scroller border right
-;    dc.w $0003 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
-    
-;scrollerpalblue3w:
-;   dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0005 ; 4 scroller border left
-;    dc.w $0005 ; 5 scroller border left
-;   dc.w $0005 ; 6 scroller border left
-;   dc.w $0005 ; 7 scroller border left
-;   dc.w $0004 ; 8 scroller border right
-;   dc.w $0004 ; 9 scroller border right
-;   dc.w $0004 ; 10 scroller border right
-;   dc.w $0004 ; 11 scroller border right
-;   dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
-    
-        
-;scrollerpalblue4w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0006 ; 4 scroller border left
-;    dc.w $0006 ; 5 scroller border left
-;    dc.w $0006 ; 6 scroller border left
-;    dc.w $0006 ; 7 scroller border left
-;    dc.w $0005 ; 8 scroller border right
-;    dc.w $0005 ; 9 scroller border right
-;    dc.w $0005 ; 10 scroller border right
-;    dc.w $0005 ; 11 scroller border right
-;    dc.w $0104 ; 12 scroller main color
-;    dc.w $0104 ; 13 scroller main color
-;    dc.w $0104 ; 14 scroller main color
-;    dc.w $0104 ; 15 scroller main color
-    
-;scrollerpalgreen1w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0030 ; 4 scroller border left
-;    dc.w $0030 ; 5 scroller border left
-;    dc.w $0030 ; 6 scroller border left
-;    dc.w $0030 ; 7 scroller border left
-;    dc.w $0020 ; 8 scroller border right
-;    dc.w $0020 ; 9 scroller border right
-;    dc.w $0020 ; 10 scroller border right
-;    dc.w $0020 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-                
-;scrollerpalgreen2w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0040 ; 4 scroller border left
-;    dc.w $0040 ; 5 scroller border left
-;    dc.w $0040 ; 6 scroller border left
-;    dc.w $0040 ; 7 scroller border left
-;    dc.w $0030 ; 8 scroller border right
-;    dc.w $0030 ; 9 scroller border right
-;    dc.w $0030 ; 10 scroller border right
-;    dc.w $0030 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-            
-;scrollerpalgreen3w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0050 ; 4 scroller border left
-;    dc.w $0050 ; 5 scroller border left
-;    dc.w $0050 ; 6 scroller border left
-;    dc.w $0050 ; 7 scroller border left
-;    dc.w $0040 ; 8 scroller border right
-;    dc.w $0040 ; 9 scroller border right
-;    dc.w $0040 ; 10 scroller border right
-;    dc.w $0040 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-        
-            
-;scrollerpalgreen4w:
-;    dc.w $0777 ; 0 %0000 bg
-;    dc.w $0777 ; 1 initial border color (invisible, change to 777 later) (further out)
-;    dc.w $0777 ; 2 initial border color (invisible, change to 777 later) (closer to the middle)
-;    if DEBUG
-;    dc.w $0700 ; 3 inital cursor color (black)
-;    else
-;    dc.w $0000 ; 3 inital cursor color (black)
-;    endif
-;    dc.w $0060 ; 4 scroller border left
-;    dc.w $0060 ; 5 scroller border left
-;    dc.w $0060 ; 6 scroller border left
-;    dc.w $0060 ; 7 scroller border left
-;    dc.w $0050 ; 8 scroller border right
-;    dc.w $0050 ; 9 scroller border right
-;    dc.w $0050 ; 10 scroller border right
-;    dc.w $0050 ; 11 scroller border right
-;    dc.w $0141 ; 12 scroller main color
-;    dc.w $0141 ; 13 scroller main color
-;    dc.w $0141 ; 14 scroller main color
-;    dc.w $0141 ; 15 scroller main color
-
-
-;vbicounter:
-;    dc.w 0
-
-;keyclick: ; taken from emutos!
-;    dc.b $3B,0 ; channel A pitch (0,1)
-;    dc.b 0,0 ; no channel B (2,3)
-;    dc.b 0,0 ; no channel C (4,5)
-;    dc.b 0 ; no noise (6)
-;    dc.b $FE ; only channel A (7)
-;    dc.b 16 ; channel A amplitude (8)
-;    dc.b 0 ; channel B amp (9)
-;    dc.b 0 ; channel B amp (10)
-;    dc.b $80 ; envelope (11)
-;    dc.b 1 ; envelope (12)
-;    dc.b 3 ; envelope (13)
-
-;    even
-
-;sndrs:
-;    dc.b 0,0
-;    dc.b 0,0
-;    dc.b 0,0
-;    dc.b 0
-;    dc.b $FF
-;    dc.b 0
-;    dc.b 0
-;    dc.b 0
-;    dc.b 0
-;    dc.b 0
-;    dc.b 0
-
-;    even
-
-;nos:	DC.B	0,0,$3E,0
-;	dc.b	1,0,1,0
-;	DC.B	2,0,$EE,0
-;	dc.b	3,0,0,0
-;	DC.B	4,0,$59,0
-;	dc.b	5,0,2,0
-;	DC.B	6,0,7,0
-;	dc.b	7,0,$F8,0
-;vols:
-;	DC.B	8,0
-;vol1	dc.b	$E,0
-;	DC.B	9,0
-;vol2	dc.b	$E,0
-;	DC.B	$A,0
-;vol3	dc.b	$F,0
-;    even
 
 scrolltext:
     include 'gen_scrolltext.s'
@@ -4772,99 +3440,6 @@ snd_crash_dosound:
 
     include 'sound.s'
 
-;snd_tribell_dosound:
-;    dc.b 0,146   ; /* channel A pitch */
-;    dc.b 1,1
-;    dc.b 2,0     ;  /* no channel B */
-;    dc.b 3,0
-;    dc.b 4,0     ;  /* no channel C */
-;    dc.b 5,0
-;    dc.b 6,0     ;  /* no noise */
-;    dc.b 7,$FE   ; /* no sound or noise except channel A */
-;    dc.b 8,$10  ;  /* channel A amplitude */
-;    dc.b 9,0
-;    dc.b 10,0
-;    dc.b 11,0    ;  /* envelope */
-;    dc.b 12,16
-;    dc.b 13,9
-;    dc.b $ff,60
-;    dc.b 0,164   ; /* channel A pitch */
-;    dc.b 1,2
-;    dc.b 2,0     ;  /* no channel B */
-;    dc.b 3,0
-;    dc.b 4,0     ;  /* no channel C */
-;    dc.b 5,0
-;    dc.b 6,0     ;  /* no noise */
-;    dc.b 7,$FE   ; /* no sound or noise except channel A */
-;    dc.b 8,$10  ;  /* channel A amplitude */
-;    dc.b 9,0
-;    dc.b 10,0
-;    dc.b 11,0    ;  /* envelope */
-;    dc.b 12,16
-;    dc.b 13,9
-;    dc.b $ff,30
-;    dc.b 0,195   ; /* channel A pitch */
-;    dc.b 1,1
-;    dc.b 2,0     ;  /* no channel B */
-;    dc.b 3,0
-;    dc.b 4,0     ;  /* no channel C */
-;    dc.b 5,0
-;    dc.b 6,0     ;  /* no noise */
-;    dc.b 7,$FE   ; /* no sound or noise except channel A */
-;    dc.b 8,$10  ;  /* channel A amplitude */
-;    dc.b 9,0
-;    dc.b 10,0
-;    dc.b 11,0    ;  /* envelope */
-;    dc.b 12,16
-;    dc.b 13,9
-;    dc.b $ff,60
-;    dc.b 0,146   ; /* channel A pitch */
-;    dc.b 1,1
-;    dc.b 2,0     ;  /* no channel B */
-;    dc.b 3,0
-;    dc.b 4,0     ;  /* no channel C */
-;    dc.b 5,0
-;    dc.b 6,0     ;  /* no noise */
-;    dc.b 7,$FE   ; /* no sound or noise except channel A */
-;    dc.b 8,$10  ;  /* channel A amplitude */
-;    dc.b 9,0
-;    dc.b 10,0
-;    dc.b 11,0    ;  /* envelope */
-;    dc.b 12,16
-;    dc.b 13,9
-;    dc.b $ff,30
-;    dc.b 0,164   ; /* channel A pitch */
-;    dc.b 1,2
-;    dc.b 2,0     ;  /* no channel B */
-;    dc.b 3,0
-;    dc.b 4,0     ;  /* no channel C */
-;    dc.b 5,0
-;    dc.b 6,0     ;  /* no noise */
-;    dc.b 7,$FE   ; /* no sound or noise except channel A */
-;    dc.b 8,$10  ;  /* channel A amplitude */
-;    dc.b 9,0
-;    dc.b 10,0
-;    dc.b 11,0    ;  /* envelope */
-;    dc.b 12,16
-;    dc.b 13,9
-;    dc.b $ff,60
-;    dc.b 0,195   ; /* channel A pitch */
-;    dc.b 1,1
-;    dc.b 2,0     ;  /* no channel B */
-;    dc.b 3,0
-;    dc.b 4,0     ;  /* no channel C */
-;    dc.b 5,0
-;    dc.b 6,0     ;  /* no noise */
-;    dc.b 7,$FE   ; /* no sound or noise except channel A */
-;    dc.b 8,$10  ;  /* channel A amplitude */
-;    dc.b 9,0
-;    dc.b 10,0
-;    dc.b 11,0    ;  /* envelope */
-;    dc.b 12,16
-;    dc.b 13,9
-;    dc.b $ff,30
-;    dc.b $ff,$00
-
 scrolleraddrtables:
     dc.l scrolleraddrtable1,scrolleraddrtable2
 
@@ -4884,7 +3459,6 @@ scrolleraddrtable2:
 
 logo_data:
     include 'gen_logo.s'
-    ;include 'logo_rle.s'
 
     bss
 current_scrollerpal_sequence_struct:
@@ -4946,31 +3520,6 @@ current_ani_sprite_struct2: ; holds data of the currently displayed animated spr
     ds.l 1 ; next position in the definition
 
 
-;scrollerpalred1w:
-;    ds.w 16
-;scrollerpalred2w:
-;    ds.w 16
-;scrollerpalred3w:
-;    ds.w 16
-;scrollerpalred4w:
-;    ds.w 16
-;scrollerpalgreen1w:
-;    ds.w 16
-;scrollerpalgreen2w:
-;    ds.w 16
-;scrollerpalgreen3w:
-;    ds.w 16
-;scrollerpalgreen4w:
-;    ds.w 16
-;scrollerpalblue1w:
-;    ds.w 16
-;scrollerpalblue2w:
-;    ds.w 16
-;scrollerpalblue3w:
-;    ds.w 16
-;scrollerpalblue4w:
-;    ds.w 16
-
 fontoffset1:
     ds.w 1
 fontoffset2:
@@ -4996,17 +3545,8 @@ res:
 pal:
     ds.w 16
 
-; cursor blink rate (in vbl-calls, i.e. 1/50 secs)
-;blink_rate:
-;    ds.w 1
-;curr_blink:
-;    ds.w 1
-
 spr_cursor:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_cursor_eye:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
 spr_empty:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
@@ -5017,41 +3557,11 @@ spr_butterfly_0:
 spr_butterfly_1:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-;spr_butterfly_2:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-    
-
-;spr_empty_eye:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
 spr_qm1:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
-;spr_qm2:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
 spr_qm3:
     ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_qm4:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_qm5:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-;spr_em1:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_em2:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_em3:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_cursor_legs1:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
-
-;spr_cursor_legs2:
-;    ds.l 6*16*16 ; 6 lw (2 mask+4 planes) * 16 lines * 16 shifts
 
 spr_bg1:
     ds.l 1+4*16 ; start address + 4 planes * 16 lines
