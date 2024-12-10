@@ -1,5 +1,7 @@
 # Aurora Atari ST/E 4kb intro
 
+[![Aurora by tecer and ZoltarX](https://img.youtube.com/vi/mhGgLHaLiyU/0.jpg)](https://www.youtube.com/watch?v=mhGgLHaLiyU)
+
 Meet Aurora, the poor little cursor. She's trying to get to her friend who is outside the screen border...
 
 The code is a fully synchronized, all-border-busting screen which only uses the vertical blank interrupt routine, and it also features a dosound-compatible sound replay.
